@@ -15,33 +15,25 @@ public:
 
     // Calcula la recompensa en oro al derrotar a un enemigo
     int calculateGoldReward(char enemyType, int enemyCategory) const {
-        // Fórmula de ejemplo para calcular la recompensa en oro
         int baseReward = 10; // Recompensa base por derrotar a un enemigo
-        int typeMultiplier = (type == 'A') ? 2 : (type == 'M') ? 3 : 1; // Multiplicador basado en el tipo de torre
         int categoryBonus = enemyCategory * 5; // Bono basado en la categoría del enemigo
-        return baseReward + (typeMultiplier * categoryBonus);
+        return baseReward + categoryBonus;
     }
 
-    // Verifica si un enemigo está dentro del alcance de la torre
-    bool isEnemyInRange(int enemyX, int enemyY) const {
-        int dx = enemyX - row;
-        int dy = enemyY - col;
-        return (dx * dx + dy * dy) <= (range * range); // Comprueba si el enemigo está dentro del alcance
-    }
 };
 class Map {
 private:
-    int rows, cols; // Dimensiones del mapa
-    std::vector<std::vector<char>> grid; // Representación de la cuadrícula del mapa
+    int rows, cols; 
+    std::vector<std::vector<char>> grid; 
     int entranceRow, entranceCol; // Coordenadas del punto de ingreso de los enemigos
     int bridgeRow, bridgeCol; // Coordenadas del puente del castillo
     std::vector<Tower> towers; // Lista de torres colocadas en el mapa
 
 public:
-    // Constructor de la clase Map
+
     Map(int rows, int cols, int entranceRow, int entranceCol, int bridgeRow, int bridgeCol)
         : rows(rows), cols(cols), entranceRow(entranceRow), entranceCol(entranceCol), bridgeRow(bridgeRow), bridgeCol(bridgeCol) {
-        grid.resize(rows, std::vector<char>(cols, '.')); // Inicializa el mapa con celdas vacías
+        grid.resize(rows, std::vector<char>(cols, '.')); 
         grid[entranceRow][entranceCol] = 'E'; // Marca el punto de ingreso
         grid[bridgeRow][bridgeCol] = 'B'; // Marca el puente del castillo
     }
@@ -105,20 +97,3 @@ private:
                dfs(row, col + 1, visited) || dfs(row, col - 1, visited);
     }
 };
-int main() {
-    // Crear un mapa de 10x10 con un punto de entrada y un puente
-    Map map(10, 10, 0, 0, 9, 9);
-
-    // Colocar torres en el mapa
-    Tower archerTower(0, 1, 'A', 5, 2, 3, 10, 5);
-    Tower mageTower(1, 0, 'M', 7, 3, 4, 15, 7);
-    
-    map.placeTower(archerTower.row, archerTower.col, archerTower);
-    map.placeTower(mageTower.row, mageTower.col, mageTower);
-
-    // Imprimir el mapa y las torres colocadas
-    map.printMap();
-    map.printTowers();
-
-    return 0;
-}
