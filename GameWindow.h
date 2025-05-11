@@ -18,12 +18,15 @@ private:
     const int rows = 15;
     const int cols = 25;
 
+    std::vector<EnemyUnit*> enemies;
+    sf::Clock spawnClock; // para controlar cada cuánto aparece un enemigo
+
 public:
     GameWindow(Map& mapRef);
     void run();
     void drawMap();
     sf::Vector2i getCellFromMouse(const sf::Vector2i& mousePos);
-    EnemyUnit* enemy;
+    void spawnEnemy(); // ← nuevo método
 };
 
 

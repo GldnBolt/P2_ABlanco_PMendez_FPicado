@@ -12,17 +12,6 @@ GameWindow::GameWindow(Map& mapRef)
     : map(mapRef), window(sf::VideoMode(25 * 50, 15 * 50), "Genetic Kingdom") {
     window.setFramerateLimit(60);
 
-    Enemy e(0, 0, 100, 1, 'O'); // enemigo temporal
-    std::vector<std::pair<int, int>> rawPath = map.findPath(e);
-
-    std::vector<sf::Vector2i> path;
-    for (const auto& p : rawPath)
-        path.push_back(sf::Vector2i(p.second, p.first)); // columna=x, fila=y
-
-    enemy = new EnemyUnit(path, tileSize);
-
-
-    std::cout << "Camino de A*: tamaño = " << path.size() << "\n";
     std::cout << "Creando ventana de juego\n";
 }
 
@@ -34,30 +23,68 @@ sf::Vector2i GameWindow::getCellFromMouse(const sf::Vector2i& mousePos) {
 // Método principal de loop gráfico
 void GameWindow::run() {
     std::cout << "Entrando al bucle principal\n";
+
     while (window.isOpen()) {
+        // --- Manejo de eventos ---
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
 
+            // Clic izquierdo para colocar torres
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
-                Tower t(cell.x, cell.y, 'A', 5, 2, 3, 10, 5);
+                Tower t(cell.x, cell.y, 'A', 5, 2, 3, 10, 5); // Torre básica
+
                 if (map.placeTower(cell.y, cell.x, t)) {
                     std::cout << "Torre colocada en (" << cell.y << ", " << cell.x << ")\n";
+                } else {
+                    std::cout << "No se pudo colocar torre\n";
                 }
             }
         }
 
-        enemy->update();          // actualizar posición
+        // --- Lógica de juego ---
+
+        // 1. Crear nuevo enemigo cada 3 segundos
+        if (spawnClock.getElapsedTime().asSeconds() > 3.0f) {
+            spawnEnemy();
+            spawnClock.restart();
+        }
+
+        // 2. Actualizar todos los enemigos
+        for (auto& enemy : enemies)
+            enemy->update();
+
+        // --- Dibujo ---
         window.clear(sf::Color::Black);
-        drawMap();                // dibujar el mapa
-        enemy->draw(window);     // dibujar el enemigo
-        window.display();        // mostrar todo
+
+        drawMap(); // Mapa y torres
+
+        for (auto& enemy : enemies)
+            enemy->draw(window); // Todos los enemigos
+
+        window.display();
     }
 }
 
+void GameWindow::spawnEnemy() {
+    Enemy e(0, 0, 100, 1, 'O'); // enemigo básico
+    std::vector<std::pair<int, int>> rawPath = map.findPath(e);
+
+    if (rawPath.empty()) {
+        std::cout << "No se puede generar enemigo: no hay camino\n";
+        return;
+    }
+
+    std::vector<sf::Vector2i> path;
+    for (const auto& p : rawPath)
+        path.push_back(sf::Vector2i(p.second, p.first)); // columna=x, fila=y
+
+    enemies.push_back(new EnemyUnit(path, tileSize));
+    std::cout << "Enemigo creado. Total enemigos: " << enemies.size() << "\n";
+}
 
 // Dibuja el mapa y las torres
 void GameWindow::drawMap() {
