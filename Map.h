@@ -18,14 +18,12 @@ private:
     int entranceRow, entranceCol;
     int bridgeRow, bridgeCol;
     std::vector<Tower> towers;
-
     int manhattanDistance(int x1, int y1, int x2, int y2);
     std::vector<std::pair<int, int>> reconstructPath(Node* node);
     bool dfs(int row, int col, std::vector<std::vector<bool>>& visited);
 
 public:
     Map(int rows, int cols, int entranceRow, int entranceCol, int bridgeRow, int bridgeCol);
-
     char getCell(int row, int col) const;
     bool placeTower(int row, int col, Tower tower);
     bool isPathToBridge();

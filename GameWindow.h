@@ -12,13 +12,16 @@ class GameWindow {
 private:
     sf::RenderWindow window;
     Map& map;
-    const int tileSize = 50; // Tamaño de cada celda del mapa
+    const int tileSize = 50;
+    const int rows = 15;
+    const int cols = 25;
 
 public:
     GameWindow(Map& mapRef);
-    void run(); // Inicia el loop del juego
-    void drawMap(); // Dibuja la cuadrícula y torres
+    void run();
+    void drawMap();
     sf::Vector2i getCellFromMouse(const sf::Vector2i& mousePos);
 };
+
 
 #endif

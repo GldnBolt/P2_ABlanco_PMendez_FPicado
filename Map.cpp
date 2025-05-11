@@ -14,6 +14,7 @@ Map::Map(int rows, int cols, int entranceRow, int entranceCol, int bridgeRow, in
     grid.resize(rows, std::vector<char>(cols, '.'));
     grid[entranceRow][entranceCol] = 'E';
     grid[bridgeRow][bridgeCol] = 'B';
+    std::cout << "Mapa inicializado\n";
 }
 
 char Map::getCell(int row, int col) const {
@@ -139,5 +140,6 @@ bool Map::dfs(int row, int col, std::vector<std::vector<bool>>& visited) {
     return dfs(row + 1, col, visited) || dfs(row - 1, col, visited) ||
            dfs(row, col + 1, visited) || dfs(row, col - 1, visited);
 }
+
 
 

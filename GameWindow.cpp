@@ -4,11 +4,14 @@
 
 #include "GameWindow.h"
 #include <iostream>
+#include <SFML/Graphics.hpp>
+
 
 // Constructor
-GameWindow::GameWindow(Map& mapRef) : map(mapRef), window(sf::VideoMode(500, 500), "Genetic Kingdom") {
+GameWindow::GameWindow(Map& mapRef)
+    : map(mapRef), window(sf::VideoMode(25 * 50, 15 * 50), "Genetic Kingdom") {
     window.setFramerateLimit(60);
-    std::cout << "Ventana SFML creada\n";
+    std::cout << "Creando ventana de juego\n";
 }
 
 // Convierte la posición del mouse a coordenadas de celda
@@ -44,24 +47,26 @@ void GameWindow::run() {
 
 // Dibuja el mapa y las torres
 void GameWindow::drawMap() {
-    for (int row = 0; row < 10; ++row) {
-        for (int col = 0; col < 10; ++col) {
+    for (int row = 0; row < 15; ++row) {
+        for (int col = 0; col < 25; ++col) {
             sf::RectangleShape tile(sf::Vector2f(tileSize - 1, tileSize - 1));
             tile.setPosition(col * tileSize, row * tileSize);
 
             char cell = map.getCell(row, col);
             if (cell == 'E') {
-                tile.setFillColor(sf::Color::Green); // Entrada
+                tile.setFillColor(sf::Color::Green);
             } else if (cell == 'B') {
-                tile.setFillColor(sf::Color::Blue); // Puente
+                tile.setFillColor(sf::Color::Blue);
             } else if (cell == 'A' || cell == 'M' || cell == 'T') {
-                tile.setFillColor(sf::Color::Red); // Torre
+                tile.setFillColor(sf::Color::Red);
             } else {
-                tile.setFillColor(sf::Color(100, 100, 100)); // Celda vacía
+                tile.setFillColor(sf::Color(100, 100, 100));
             }
 
             window.draw(tile);
         }
     }
 }
+
+
 
