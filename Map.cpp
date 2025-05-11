@@ -115,14 +115,29 @@ std::vector<std::pair<int, int>> Map::reconstructPath(Node* node) {
 }
 
 bool Map::dfs(int row, int col, std::vector<std::vector<bool>>& visited) {
-    if (row < 0 || row >= rows || col < 0 || col >= cols || visited[row][col] || grid[row][col] == 'T') {
+    // 1. Verifica que esté dentro del rango
+    if (row < 0 || row >= rows || col < 0 || col >= cols)
         return false;
-    }
-    if (row == bridgeRow && col == bridgeCol) {
+
+    // 2. Verifica si ya fue visitado
+    if (visited[row][col])
+        return false;
+
+    // 3. Verifica si la celda es transitable (solo '.', 'E', 'B')
+    char cell = grid[row][col];
+    if (cell != '.' && cell != 'E' && cell != 'B')
+        return false;
+
+    // 4. Si llegó al puente
+    if (row == bridgeRow && col == bridgeCol)
         return true;
-    }
+
+    // 5. Marca como visitado
     visited[row][col] = true;
+
+    // 6. Intenta moverse en las 4 direcciones
     return dfs(row + 1, col, visited) || dfs(row - 1, col, visited) ||
            dfs(row, col + 1, visited) || dfs(row, col - 1, visited);
 }
+
 
