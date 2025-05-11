@@ -11,6 +11,18 @@
 GameWindow::GameWindow(Map& mapRef)
     : map(mapRef), window(sf::VideoMode(25 * 50, 15 * 50), "Genetic Kingdom") {
     window.setFramerateLimit(60);
+
+    Enemy e(0, 0, 100, 1, 'O'); // enemigo temporal
+    std::vector<std::pair<int, int>> rawPath = map.findPath(e);
+
+    std::vector<sf::Vector2i> path;
+    for (const auto& p : rawPath)
+        path.push_back(sf::Vector2i(p.second, p.first)); // columna=x, fila=y
+
+    enemy = new EnemyUnit(path, tileSize);
+
+
+    std::cout << "Camino de A*: tamaño = " << path.size() << "\n";
     std::cout << "Creando ventana de juego\n";
 }
 
@@ -28,22 +40,24 @@ void GameWindow::run() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            // Manejo de clic izquierdo para colocar torre
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
-                Tower t(cell.x, cell.y, 'A', 5, 2, 3, 10, 5); // Torre ejemplo
+                Tower t(cell.x, cell.y, 'A', 5, 2, 3, 10, 5);
                 if (map.placeTower(cell.y, cell.x, t)) {
                     std::cout << "Torre colocada en (" << cell.y << ", " << cell.x << ")\n";
                 }
             }
         }
 
+        enemy->update();          // actualizar posición
         window.clear(sf::Color::Black);
-        drawMap(); // Dibuja mapa y torres
-        window.display();
+        drawMap();                // dibujar el mapa
+        enemy->draw(window);     // dibujar el enemigo
+        window.display();        // mostrar todo
     }
 }
+
 
 // Dibuja el mapa y las torres
 void GameWindow::drawMap() {

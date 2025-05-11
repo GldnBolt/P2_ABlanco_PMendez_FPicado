@@ -7,6 +7,8 @@
 
 #include <SFML/Graphics.hpp>
 #include "Map.h"
+#include "EnemyUnit.h"
+
 
 class GameWindow {
 private:
@@ -21,6 +23,7 @@ public:
     void run();
     void drawMap();
     sf::Vector2i getCellFromMouse(const sf::Vector2i& mousePos);
+    EnemyUnit* enemy;
 };
 
 

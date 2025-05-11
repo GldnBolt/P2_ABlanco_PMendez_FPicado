@@ -7,7 +7,7 @@
 #include "GameWindow.h"
 
 int main() {
-    Map map(15, 25, 7, 0, 9, 24);  // filas = 15, columnas = 25
+    Map map(15, 25, 0, 0, 14, 24);  // filas = 15, columnas = 25
     GameWindow game(map);
     game.run();
     return 0;
