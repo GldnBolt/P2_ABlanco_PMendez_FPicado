@@ -37,9 +37,23 @@ void GameWindow::run() {
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
                 Tower t(cell.x, cell.y, 'A', 5, 2, 3, 10, 5); // Torre básica
 
-                if (map.placeTower(cell.y, cell.x, t)) {
+                bool ocupado = false;
+                for (auto& enemy : enemies) {
+                    sf::Vector2f pos = enemy->getPosition(); // Necesitamos agregar este método
+                    int eCol = static_cast<int>(pos.x) / tileSize;
+                    int eRow = static_cast<int>(pos.y) / tileSize;
+                    if (eCol == cell.x && eRow == cell.y) {
+                        ocupado = true;
+                        break;
+                    }
+                }
+
+                if (ocupado) {
+                    std::cout << "No se puede colocar torre: un enemigo está sobre esa celda.\n";
+                } else if (map.placeTower(cell.y, cell.x, t)) {
                     std::cout << "Torre colocada en (" << cell.y << ", " << cell.x << ")\n";
-                } else {
+                }
+                else {
                     std::cout << "No se pudo colocar torre\n";
                 }
             }

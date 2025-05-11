@@ -21,10 +21,10 @@ private:
 public:
     EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize);
 
-    void update();                // Mueve al enemigo si ha pasado suficiente tiempo
-    void draw(sf::RenderWindow& window); // Lo dibuja en pantalla
-    bool hasReachedEnd() const;
+    void update();                         // Mueve al enemigo paso a paso
+    void draw(sf::RenderWindow& window);   // Lo dibuja en pantalla
+    bool hasReachedEnd() const;            // Ya llegó al destino
+    sf::Vector2f getPosition() const;      // ← Necesario para verificar posición del enemigo
 };
 
 #endif
-

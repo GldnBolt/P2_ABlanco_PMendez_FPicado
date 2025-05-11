@@ -88,18 +88,28 @@ std::vector<std::pair<int, int>> Map::findPath(Enemy& enemy) {
             int newX = currentNode->x + dir.first;
             int newY = currentNode->y + dir.second;
 
-            if (newX >= 0 && newX < rows && newY >= 0 && newY < cols &&
-                grid[newX][newY] != 'T' && !closedList[newX][newY]) {
-                int newGCost = currentNode->gCost + 1;
-                int newHCost = manhattanDistance(newX, newY, bridgeRow, bridgeCol);
-                Node* neighbor = new Node(newX, newY, newGCost, newHCost, currentNode);
-                openList.push(*neighbor);
-            }
+            // Validar límites
+            if (newX < 0 || newX >= rows || newY < 0 || newY >= cols)
+                continue;
+
+            // Verificar si ya se cerró o si no es transitable
+            if (closedList[newX][newY])
+                continue;
+
+            char cell = grid[newX][newY];
+            if (cell != '.' && cell != 'E' && cell != 'B')  // ← solo se puede caminar sobre estos
+                continue;
+
+            int newGCost = currentNode->gCost + 1;
+            int newHCost = manhattanDistance(newX, newY, bridgeRow, bridgeCol);
+            Node* neighbor = new Node(newX, newY, newGCost, newHCost, currentNode);
+            openList.push(*neighbor);
         }
     }
 
-    return {};
+    return {}; // no hay camino posible
 }
+
 
 int Map::manhattanDistance(int x1, int y1, int x2, int y2) {
     return std::abs(x1 - x2) + std::abs(y1 - y2);
