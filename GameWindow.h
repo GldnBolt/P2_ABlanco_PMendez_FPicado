@@ -1,14 +1,15 @@
-//
-// Created by Xpc on 10/5/2025.
-//
-
 #ifndef GAMEWINDOW_H
 #define GAMEWINDOW_H
 
 #include <SFML/Graphics.hpp>
 #include "Map.h"
 #include "EnemyUnit.h"
+#include <vector>
 
+struct Shot {
+    sf::Vector2f from;
+    sf::Vector2f to;
+};
 
 class GameWindow {
 private:
@@ -18,16 +19,27 @@ private:
     const int rows = 15;
     const int cols = 25;
 
+    std::vector<Shot> activeShots;
     std::vector<EnemyUnit*> enemies;
-    sf::Clock spawnClock; // para controlar cada cuánto aparece un enemigo
+    sf::Clock spawnClock;
+
+    // 🧱 Texturas del mapa
+    sf::Texture texGrass, texGrass2;
+    sf::Texture texCornerTL, texCornerTR, texCornerBL, texCornerBR;
+    sf::Texture texRoad[8];
+    sf::Texture texTowerLvl1;
+    sf::Texture texTree;
+
 
 public:
     GameWindow(Map& mapRef);
+
     void run();
     void drawMap();
+    void drawTowers();
     sf::Vector2i getCellFromMouse(const sf::Vector2i& mousePos);
-    void spawnEnemy(); // ← nuevo método
+    void spawnEnemy();
+    void updateCombat();
 };
-
 
 #endif

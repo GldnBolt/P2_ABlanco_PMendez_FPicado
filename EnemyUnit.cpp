@@ -7,7 +7,7 @@
 #include <iostream>
 
 EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize)
-    : path(path), currentIndex(0), speed(100.f), tileSize(tileSize), health(100) {
+    : path(path), currentIndex(0), speed(10.f), tileSize(tileSize), health(1000) {
 
     shape.setRadius(tileSize / 4);
     shape.setFillColor(sf::Color::Yellow);

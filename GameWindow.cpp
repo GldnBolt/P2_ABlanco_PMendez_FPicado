@@ -5,12 +5,30 @@
 #include "GameWindow.h"
 #include <iostream>
 #include <SFML/Graphics.hpp>
-
+#include <cmath>
 
 // Constructor
 GameWindow::GameWindow(Map& mapRef)
     : map(mapRef), window(sf::VideoMode(25 * 50, 15 * 50), "Genetic Kingdom") {
     window.setFramerateLimit(60);
+
+    texGrass.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/grass.png");
+    texGrass2.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/grass2.png");
+
+    texCornerTL.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/top_left_corner.png");
+    texCornerTR.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/top_right_corner.png");
+    texCornerBL.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/bottom_left_corner.png");
+    texCornerBR.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/bottom_right_corner.png");
+
+    for (int i = 0; i < 8; ++i) {
+        texRoad[i].loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/road" + std::to_string(i+1) + ".png");
+    }
+
+    texTowerLvl1.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/tower_lvl1.png");
+    texTree.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/tree.png");
+
+
+
 
     std::cout << "Creando ventana de juego\n";
 }
@@ -20,9 +38,12 @@ sf::Vector2i GameWindow::getCellFromMouse(const sf::Vector2i& mousePos) {
     return sf::Vector2i(mousePos.x / tileSize, mousePos.y / tileSize);
 }
 
+
+
 // Método principal de loop gráfico
 void GameWindow::run() {
     std::cout << "Entrando al bucle principal\n";
+
 
     while (window.isOpen()) {
         // --- Manejo de eventos ---
@@ -71,18 +92,35 @@ void GameWindow::run() {
         for (auto& enemy : enemies)
             enemy->update();
 
-        // --- Dibujo ---
-        window.clear(sf::Color::Black);
+        for (auto& enemy : enemies)
+            enemy->update();
 
-        drawMap(); // Mapa y torres
+        updateCombat();
+
+        // --- Dibujo ---
+        window.clear(sf::Color(80, 200, 120)); // fondo menta claro
+
+        drawMap();      // fondo visual
+        drawTowers();   // torres giratorias
 
         for (auto& enemy : enemies)
-            enemy->draw(window); // Todos los enemigos
+            enemy->draw(window); // enemigos activos
 
+        // Dibujar disparos (efecto rayo/bomba)
+        for (const auto& shot : activeShots) {
+            sf::Vertex line[] = {
+                sf::Vertex(shot.from, sf::Color::Cyan),
+                sf::Vertex(shot.to, sf::Color::Cyan)
+            };
+            window.draw(line, 2, sf::Lines);
+        }
+
+        activeShots.clear();
         window.display();
     }
 }
 
+// Genera un nuevo enemigo y lo agrega al vector de enemigos
 void GameWindow::spawnEnemy() {
     Enemy e(0, 0, 100, 1, 'O'); // enemigo básico
     std::vector<std::pair<int, int>> rawPath = map.findPath(e);
@@ -102,26 +140,119 @@ void GameWindow::spawnEnemy() {
 
 // Dibuja el mapa y las torres
 void GameWindow::drawMap() {
-    for (int row = 0; row < 15; ++row) {
-        for (int col = 0; col < 25; ++col) {
-            sf::RectangleShape tile(sf::Vector2f(tileSize - 1, tileSize - 1));
-            tile.setPosition(col * tileSize, row * tileSize);
-
+    for (int row = 0; row < rows; ++row) {
+        for (int col = 0; col < cols; ++col) {
             char cell = map.getCell(row, col);
+            sf::Sprite tile;
+
+            // Entrada
             if (cell == 'E') {
-                tile.setFillColor(sf::Color::Green);
-            } else if (cell == 'B') {
-                tile.setFillColor(sf::Color::Blue);
-            } else if (cell == 'A' || cell == 'M' || cell == 'T') {
-                tile.setFillColor(sf::Color::Red);
+                tile.setTexture(texCornerTL);
+            }
+            // Salida
+            else if (cell == 'B') {
+                tile.setTexture(texCornerTR);
+            }
+            // Camino
+            else if (cell == '#') {
+                tile.setTexture(texRoad[rand() % 8]);  // usa 8 variaciones de tiles
+            }
+            // Obstáculo natural (opcional)
+            else if (cell == 'T') {
+                tile.setTexture(texTree);
+            }
+            // Césped variado
+            else if ((row + col) % 2 == 0) {
+                tile.setTexture(texGrass);
             } else {
-                tile.setFillColor(sf::Color(100, 100, 100));
+                tile.setTexture(texGrass2);
             }
 
+            tile.setPosition(col * tileSize, row * tileSize);
             window.draw(tile);
         }
     }
 }
+
+
+// Actualiza el combate: verifica si los enemigos están dentro del rango de ataque de las torres
+void GameWindow::updateCombat() {
+    std::vector<EnemyUnit*> vivos;
+
+    for (auto& enemy : enemies) {
+        bool fueAtacado = false;
+
+        for (const auto& tower : map.getTowers()) {
+            sf::Vector2i enemyGrid = enemy->getGridPosition();
+            int dx = enemyGrid.x - tower.col;
+            int dy = enemyGrid.y - tower.row;
+            int distancia2 = dx * dx + dy * dy;
+
+            if (distancia2 <= tower.range * tower.range) {
+                if (distancia2 <= tower.range * tower.range) {
+                    enemy->takeDamage(tower.damage);
+
+                    Shot s;
+                    s.from = sf::Vector2f(tower.col * tileSize + tileSize / 2,
+                                          tower.row * tileSize + tileSize / 2);
+                    s.to = enemy->getPosition();
+                    activeShots.push_back(s);
+
+                    fueAtacado = true;
+                    break;
+                }
+
+            }
+        }
+
+        if (enemy->isAlive())
+            vivos.push_back(enemy);
+        else
+            delete enemy; // libera memoria
+    }
+
+    enemies = vivos;
+}
+
+void GameWindow::drawTowers() {
+    for (const auto& tower : map.getTowers()) {
+        sf::Sprite sprite;
+        sprite.setTexture(texTowerLvl1);
+        sprite.setOrigin(tileSize / 2, tileSize / 2);
+        sprite.setPosition(tower.col * tileSize + tileSize / 2,
+                           tower.row * tileSize + tileSize / 2);
+
+        // Buscar el enemigo más cercano dentro del rango
+        float closestDist = 999999.f;
+        sf::Vector2f target;
+
+        for (auto& enemy : enemies) {
+            sf::Vector2f enemyPos = enemy->getPosition();
+            float dx = enemyPos.x - sprite.getPosition().x;
+            float dy = enemyPos.y - sprite.getPosition().y;
+            float distSquared = dx * dx + dy * dy;
+
+            if (distSquared <= tower.range * tileSize * tower.range * tileSize && distSquared < closestDist) {
+                closestDist = distSquared;
+                target = enemyPos;
+            }
+        }
+
+        // Si encontró un objetivo, rota el sprite y actualiza la torre
+        if (closestDist < 999999.f) {
+            float angle = atan2(target.y - sprite.getPosition().y,
+                                target.x - sprite.getPosition().x) * 180.f / 3.14159265f;
+            float rotated = angle + 90.f;
+            sprite.setRotation(rotated);
+            const_cast<Tower&>(tower).rotation = rotated;  // Guardar la última rotación
+        } else {
+            sprite.setRotation(tower.rotation);  // Usar la rotación previa
+        }
+
+        window.draw(sprite);
+    }
+}
+
 
 
 

@@ -14,6 +14,7 @@ public:
     int range;
     int specialCooldown;
     int attackCooldown;
+    float rotation = 0.f;
 
     Tower(int x, int y, char type, int damage, int speed, int range, int specialCooldown, int attackCooldown);
     int calculateGoldReward(char enemyType, int enemyCategory) const;

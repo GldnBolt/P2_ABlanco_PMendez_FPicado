@@ -151,5 +151,10 @@ bool Map::dfs(int row, int col, std::vector<std::vector<bool>>& visited) {
            dfs(row, col + 1, visited) || dfs(row, col - 1, visited);
 }
 
+const std::vector<Tower>& Map::getTowers() const {
+    return towers;
+}
+
+
 
 
