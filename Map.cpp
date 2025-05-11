@@ -16,21 +16,29 @@ Map::Map(int rows, int cols, int entranceRow, int entranceCol, int bridgeRow, in
     grid[bridgeRow][bridgeCol] = 'B';
 }
 
+char Map::getCell(int row, int col) const {
+    return grid[row][col];
+}
+
 bool Map::placeTower(int row, int col, Tower tower) {
     if (row < 0 || row >= rows || col < 0 || col >= cols || grid[row][col] != '.') {
         std::cout << "No se puede colocar la torre en esta posición.\n";
         return false;
     }
-    grid[row][col] = tower.type;
-    tower.row = row;
-    tower.col = col;
 
+    // Simular la torre antes de agregarla realmente
+    grid[row][col] = tower.type;
+
+    // Si bloquea el camino, revertimos
     if (!isPathToBridge()) {
-        grid[row][col] = '.';
+        grid[row][col] = '.'; // Revertir la marca
         std::cout << "No se puede colocar la torre aquí, bloquearía el camino al puente.\n";
         return false;
     }
 
+    // Ahora sí es válida, guardar torre
+    tower.row = row;
+    tower.col = col;
     towers.push_back(tower);
     return true;
 }

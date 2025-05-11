@@ -1,0 +1,24 @@
+//
+// Created by Xpc on 10/5/2025.
+//
+
+#ifndef GAMEWINDOW_H
+#define GAMEWINDOW_H
+
+#include <SFML/Graphics.hpp>
+#include "Map.h"
+
+class GameWindow {
+private:
+    sf::RenderWindow window;
+    Map& map;
+    const int tileSize = 50; // Tamaño de cada celda del mapa
+
+public:
+    GameWindow(Map& mapRef);
+    void run(); // Inicia el loop del juego
+    void drawMap(); // Dibuja la cuadrícula y torres
+    sf::Vector2i getCellFromMouse(const sf::Vector2i& mousePos);
+};
+
+#endif

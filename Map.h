@@ -10,6 +10,7 @@
 #include "Enemy.h"
 #include "Node.h"
 
+
 class Map {
 private:
     int rows, cols;
@@ -25,6 +26,7 @@ private:
 public:
     Map(int rows, int cols, int entranceRow, int entranceCol, int bridgeRow, int bridgeCol);
 
+    char getCell(int row, int col) const;
     bool placeTower(int row, int col, Tower tower);
     bool isPathToBridge();
     void printMap() const;
