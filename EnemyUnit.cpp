@@ -7,7 +7,7 @@
 #include <iostream>
 
 EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize)
-    : path(path), currentIndex(0), speed(100.f), tileSize(tileSize) {
+    : path(path), currentIndex(0), speed(100.f), tileSize(tileSize), health(100) {
 
     shape.setRadius(tileSize / 4);
     shape.setFillColor(sf::Color::Yellow);
@@ -49,4 +49,23 @@ bool EnemyUnit::hasReachedEnd() const {
 sf::Vector2f EnemyUnit::getPosition() const {
     return position;
 }
+
+int EnemyUnit::getHealth() const {
+    return health;
+}
+
+void EnemyUnit::takeDamage(int dmg) {
+    health -= dmg;
+    if (health < 0) health = 0;
+}
+
+bool EnemyUnit::isAlive() const {
+    return health > 0;
+}
+
+sf::Vector2i EnemyUnit::getGridPosition() const {
+    return sf::Vector2i(static_cast<int>(position.x) / tileSize,
+                        static_cast<int>(position.y) / tileSize);
+}
+
 
