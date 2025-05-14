@@ -12,20 +12,20 @@ GameWindow::GameWindow(Map& mapRef)
     : map(mapRef), window(sf::VideoMode(25 * 50, 15 * 50), "Genetic Kingdom") {
     window.setFramerateLimit(60);
 
-    texGrass.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/grass.png");
-    texGrass2.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/grass2.png");
+    texGrass.loadFromFile("Sprites/grass.png");
+    texGrass2.loadFromFile("Sprites/grass2.png");
 
-    texCornerTL.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/top_left_corner.png");
-    texCornerTR.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/top_right_corner.png");
-    texCornerBL.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/bottom_left_corner.png");
-    texCornerBR.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/bottom_right_corner.png");
+    texCornerTL.loadFromFile("Sprites/top_left_corner.png");
+    texCornerTR.loadFromFile("Sprites/top_right_corner.png");
+    texCornerBL.loadFromFile("Sprites/bottom_left_corner.png");
+    texCornerBR.loadFromFile("Sprites/bottom_right_corner.png");
 
     for (int i = 0; i < 8; ++i) {
-        texRoad[i].loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/road" + std::to_string(i+1) + ".png");
+        texRoad[i].loadFromFile("Sprites/road" + std::to_string(i+1) + ".png");
     }
 
-    texTowerLvl1.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/tower_lvl1.png");
-    texTree.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Sprites/tree.png");
+    texTowerLvl1.loadFromFile("Sprites/tower_lvl1.png");
+    texTree.loadFromFile("Sprites/tree.png");
 
 
 
