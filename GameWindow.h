@@ -34,6 +34,11 @@ private:
     sf::Texture texCastle;
     sf::Texture texPortal;
 
+    sf::Font font;
+    sf::Text textOro;
+    sf::Text textOleada;
+    sf::Text textEnemigos;
+    int oleada = 1;
 
 public:
     GameWindow(Map& mapRef);

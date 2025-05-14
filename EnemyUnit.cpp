@@ -12,28 +12,28 @@ EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char t
     switch (type) {
         case 'O':
             speed = 0.75f;
-            arroewResistance = 0.5f;
+            arrowResistance = 0.5f;
             magicResistance = 2.f;
             artilleryResistance = 2.f;
             color = sf::Color::White;
             break;
         case 'E':
             speed = 0.25f;
-            arroewResistance = 2.f;
+            arrowResistance = 2.f;
             magicResistance = 0.5f;
             artilleryResistance = 2.f;
             color = sf::Color::Green;
             break;
         case 'H':
             speed = 0.5f;
-            arroewResistance = 1.f;
+            arrowResistance = 1.f;
             magicResistance = 1.f;
             artilleryResistance = 0.f;
             color = sf::Color::Yellow;
             break;
         case 'M':
             speed = 0.5f;
-            arroewResistance = 0.5f;
+            arrowResistance = 0.5f;
             magicResistance = 2.f;
             artilleryResistance = 0.5f;
             color = sf::Color::Blue;
@@ -90,7 +90,7 @@ int EnemyUnit::getHealth() const {
 void EnemyUnit::takeDamage(int dmg, char damageType) {
     switch (damageType) {
         case 'B':
-            health -= dmg*arroewResistance;
+            health -= dmg*arrowResistance;
             break;
         case 'A':
             health -= dmg*artilleryResistance;

@@ -20,9 +20,9 @@ private:
     int health = 100; // vida del enemigo
     float speed; // en píxeles por segundo
     int type; // tipo de enemigo
-    float arroewResistance; // resistencia a flechas
+    float arrowResistance; // resistencia a flechas
     float magicResistance; // resistencia a magia
-    float artilleryResistance;
+    float artilleryResistance; // resistencia a artillería
 
     sf::Color color;
 

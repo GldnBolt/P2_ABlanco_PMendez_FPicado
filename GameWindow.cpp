@@ -9,9 +9,12 @@
 
 // Constructor
 GameWindow::GameWindow(Map& mapRef)
-    : map(mapRef), window(sf::VideoMode(25 * 50, 15 * 50), "Genetic Kingdom") {
+    : map(mapRef),
+      window(sf::VideoMode(25 * 50 + 300, 15 * 50), "Genetic Kingdom")  // 1250 + 300 = 1550 ancho
+{
     window.setFramerateLimit(60);
 
+    // Carga de texturas
     texCastle.loadFromFile("Sprites/tree.png");
     texPortal.loadFromFile("Sprites/portal.png");
 
@@ -24,17 +27,40 @@ GameWindow::GameWindow(Map& mapRef)
     texCornerBR.loadFromFile("Sprites/bottom_right_corner.png");
 
     for (int i = 0; i < 8; ++i) {
-        texRoad[i].loadFromFile("Sprites/road" + std::to_string(i+1) + ".png");
+        texRoad[i].loadFromFile("Sprites/road" + std::to_string(i + 1) + ".png");
     }
 
     texTowerLvl1.loadFromFile("Sprites/tower_lvl1.png");
     texTree.loadFromFile("Sprites/tree.png");
 
+    // Fuente para el HUD
+    if (!font.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Assets/arial.ttf")) {
+        std::cout << "Error al cargar la fuente\n";
+    }
 
+    int hudX = 25 * 50 + 20;  // Posición X del panel lateral
 
+    // HUD: oro
+    textOro.setFont(font);
+    textOro.setCharacterSize(24);
+    textOro.setFillColor(sf::Color::Yellow);
+    textOro.setPosition(hudX, 30);
+
+    // HUD: oleada
+    textOleada.setFont(font);
+    textOleada.setCharacterSize(20);
+    textOleada.setFillColor(sf::Color::Cyan);
+    textOleada.setPosition(hudX, 70);
+
+    // HUD: enemigos
+    textEnemigos.setFont(font);
+    textEnemigos.setCharacterSize(20);
+    textEnemigos.setFillColor(sf::Color::White);
+    textEnemigos.setPosition(hudX, 110);
 
     std::cout << "Creando ventana de juego\n";
 }
+
 
 // Convierte la posición del mouse a coordenadas de celda
 sf::Vector2i GameWindow::getCellFromMouse(const sf::Vector2i& mousePos) {
@@ -46,7 +72,6 @@ sf::Vector2i GameWindow::getCellFromMouse(const sf::Vector2i& mousePos) {
 // Método principal de loop gráfico
 void GameWindow::run() {
     std::cout << "Entrando al bucle principal\n";
-
 
     while (window.isOpen()) {
         // --- Manejo de eventos ---
@@ -63,7 +88,7 @@ void GameWindow::run() {
 
                 bool ocupado = false;
                 for (auto& enemy : enemies) {
-                    sf::Vector2f pos = enemy->getPosition(); // Necesitamos agregar este método
+                    sf::Vector2f pos = enemy->getPosition();
                     int eCol = static_cast<int>(pos.x) / tileSize;
                     int eRow = static_cast<int>(pos.y) / tileSize;
                     if (eCol == cell.x && eRow == cell.y) {
@@ -76,8 +101,8 @@ void GameWindow::run() {
                     std::cout << "No se puede colocar torre: un enemigo está sobre esa celda.\n";
                 } else if (map.placeTower(cell.y, cell.x, t)) {
                     std::cout << "Torre colocada en (" << cell.y << ", " << cell.x << ")\n";
-                }
-                else {
+                    playerGold -= 10; // costo por torre
+                } else {
                     std::cout << "No se pudo colocar torre\n";
                 }
             }
@@ -85,28 +110,37 @@ void GameWindow::run() {
 
         // --- Lógica de juego ---
 
-        // 1. Crear nuevo enemigo cada 3 segundos
+        // Crear nuevo enemigo cada 2 segundos
         if (spawnClock.getElapsedTime().asSeconds() > 2.0f) {
             spawnEnemy();
             spawnClock.restart();
         }
 
-        // 2. Actualizar todos los enemigos
         for (auto& enemy : enemies)
             enemy->update();
 
         updateCombat();
 
+        // Actualizar HUD
+        textOro.setString("Oro: " + std::to_string(playerGold));
+        textOleada.setString("Oleada: " + std::to_string(oleada));
+        textEnemigos.setString("Enemigos: " + std::to_string(enemies.size()));
+
         // --- Dibujo ---
         window.clear(sf::Color(80, 200, 120)); // fondo menta claro
 
-        drawMap();      // fondo visual
-        drawTowers();   // torres giratorias
+        sf::RectangleShape panelBG(sf::Vector2f(300, rows * tileSize));
+        panelBG.setPosition(cols * tileSize, 0);
+        panelBG.setFillColor(sf::Color(60, 60, 60));
+        window.draw(panelBG);
+
+
+        drawMap();
+        drawTowers();
 
         for (auto& enemy : enemies)
-            enemy->draw(window); // enemigos activos
+            enemy->draw(window);
 
-        // Dibujar disparos (efecto rayo/bomba)
         for (const auto& shot : activeShots) {
             sf::Vertex line[] = {
                 sf::Vertex(shot.from, sf::Color::Cyan),
@@ -116,9 +150,16 @@ void GameWindow::run() {
         }
 
         activeShots.clear();
+
+        // Dibujar HUD
+        window.draw(textOro);
+        window.draw(textOleada);
+        window.draw(textEnemigos);
+
         window.display();
     }
 }
+
 
 // Genera un nuevo enemigo y lo agrega al vector de enemigos
 void GameWindow::spawnEnemy() {
