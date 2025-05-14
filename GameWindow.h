@@ -23,6 +23,7 @@ private:
     std::vector<EnemyUnit*> enemies;
     sf::Clock spawnClock;
     int enemyCounter=0;
+    int playerGold=0;
 
     // 🧱 Texturas del mapa
     sf::Texture texGrass, texGrass2;
@@ -30,6 +31,8 @@ private:
     sf::Texture texRoad[8];
     sf::Texture texTowerLvl1;
     sf::Texture texTree;
+    sf::Texture texCastle;
+    sf::Texture texPortal;
 
 
 public:

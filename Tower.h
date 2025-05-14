@@ -9,6 +9,8 @@ class Tower {
 public:
     int row, col;
     char type;
+    int cost;
+    int level = 0;
     int damage;
     int speed;
     int range;
@@ -16,7 +18,7 @@ public:
     int attackCooldown;
     float rotation = 0.f;
 
-    Tower(int x, int y, char type, int damage, int speed, int range, int specialCooldown, int attackCooldown);
+    Tower(int x, int y, char type, int specialCooldown);
     int calculateGoldReward(char enemyType, int enemyCategory) const;
 };
 

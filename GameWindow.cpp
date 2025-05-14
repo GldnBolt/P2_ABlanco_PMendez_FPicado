@@ -12,6 +12,9 @@ GameWindow::GameWindow(Map& mapRef)
     : map(mapRef), window(sf::VideoMode(25 * 50, 15 * 50), "Genetic Kingdom") {
     window.setFramerateLimit(60);
 
+    texCastle.loadFromFile("Sprites/tree.png");
+    texPortal.loadFromFile("Sprites/portal.png");
+
     texGrass.loadFromFile("Sprites/grass.png");
     texGrass2.loadFromFile("Sprites/grass2.png");
 
@@ -56,7 +59,7 @@ void GameWindow::run() {
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
-                Tower t(cell.x, cell.y, 'A', 5, 2, 3, 10, 5); // Torre básica
+                Tower t(cell.x, cell.y, 'A', 10); // Torre básica
 
                 bool ocupado = false;
                 for (auto& enemy : enemies) {
@@ -83,7 +86,7 @@ void GameWindow::run() {
         // --- Lógica de juego ---
 
         // 1. Crear nuevo enemigo cada 3 segundos
-        if (spawnClock.getElapsedTime().asSeconds() > 3.0f) {
+        if (spawnClock.getElapsedTime().asSeconds() > 2.0f) {
             spawnEnemy();
             spawnClock.restart();
         }
@@ -131,16 +134,16 @@ void GameWindow::spawnEnemy() {
     for (const auto& p : rawPath)
         path.push_back(sf::Vector2i(p.second, p.first)); // columna=x, fila=y
 
-    if (enemyCounter < 5) {
+    if (enemyCounter < 3) {
         enemies.push_back(new EnemyUnit(path, tileSize, 'O'));
         enemyCounter++;
-    } else if (enemyCounter >= 5 && enemyCounter < 10) {
+    } else if (enemyCounter >= 3 && enemyCounter < 6) {
         enemies.push_back(new EnemyUnit(path, tileSize, 'E'));
         enemyCounter++;
-    } else if (enemyCounter >= 10 && enemyCounter < 15) {
+    } else if (enemyCounter >= 6 && enemyCounter < 9) {
         enemies.push_back(new EnemyUnit(path, tileSize, 'H'));
         enemyCounter++;
-    } else if (enemyCounter >= 15) {
+    } else if (enemyCounter >= 9) {
         enemies.push_back(new EnemyUnit(path, tileSize, 'M'));
         enemyCounter++;
     }
@@ -156,11 +159,11 @@ void GameWindow::drawMap() {
 
             // Entrada
             if (cell == 'E') {
-                tile.setTexture(texCornerTL);
+                tile.setTexture(texPortal);
             }
             // Salida
             else if (cell == 'B') {
-                tile.setTexture(texCornerTR);
+                tile.setTexture(texCastle);
             }
             // Camino
             else if (cell == '#') {
@@ -199,7 +202,7 @@ void GameWindow::updateCombat() {
 
             if (distancia2 <= tower.range * tower.range) {
                 if (distancia2 <= tower.range * tower.range) {
-                    enemy->takeDamage(tower.damage);
+                    enemy->takeDamage(tower.damage, 'M');
 
                     Shot s;
                     s.from = sf::Vector2f(tower.col * tileSize + tileSize / 2,

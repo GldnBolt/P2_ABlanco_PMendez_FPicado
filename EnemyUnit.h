@@ -20,9 +20,9 @@ private:
     int health = 100; // vida del enemigo
     float speed; // en píxeles por segundo
     int type; // tipo de enemigo
-    int arroewResistance; // resistencia a flechas
-    int magicResistance; // resistencia a magia
-    int artilleryResistance;
+    float arroewResistance; // resistencia a flechas
+    float magicResistance; // resistencia a magia
+    float artilleryResistance;
 
     sf::Color color;
 
@@ -35,7 +35,7 @@ public:
     bool hasReachedEnd() const;            // Ya llegó al destino
     sf::Vector2f getPosition() const;      // ← Necesario para verificar posición del enemigo
     int getHealth() const;               // Devuelve la vida actual
-    void takeDamage(int dmg);            // Resta vida al enemigo
+    void takeDamage(int dmg, char damageType);            // Resta vida al enemigo
     bool isAlive() const;               // Devuelve true si el enemigo sigue vivo
     sf::Vector2i getGridPosition() const;   // Devuelve la posición en la cuadrícula
 
