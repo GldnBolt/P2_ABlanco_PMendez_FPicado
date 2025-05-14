@@ -3,7 +3,6 @@
 //
 
 #include "Map.h"
-#include "Enemy.h"
 #include "GameWindow.h"
 
 int main() {

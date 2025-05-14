@@ -10,17 +10,25 @@
 
 class EnemyUnit {
 private:
-    int health; // vida del enemigo
     sf::CircleShape shape; // forma del enemigo
     std::vector<sf::Vector2i> path; // ruta a seguir
     int currentIndex; // índice de la celda actual
-    float speed; // en píxeles por segundo
     sf::Vector2f position; // posición en píxeles
     sf::Clock clock; // reloj para controlar el tiempo
     int tileSize; // tamaño de la celda en píxeles
 
+    int health = 100; // vida del enemigo
+    float speed; // en píxeles por segundo
+    int type; // tipo de enemigo
+    int arroewResistance; // resistencia a flechas
+    int magicResistance; // resistencia a magia
+    int artilleryResistance;
+
+    sf::Color color;
+
+
 public:
-    EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize);
+    EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char type);
 
     void update();                         // Mueve al enemigo paso a paso
     void draw(sf::RenderWindow& window);   // Lo dibuja en pantalla

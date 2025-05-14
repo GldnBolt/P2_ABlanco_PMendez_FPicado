@@ -92,9 +92,6 @@ void GameWindow::run() {
         for (auto& enemy : enemies)
             enemy->update();
 
-        for (auto& enemy : enemies)
-            enemy->update();
-
         updateCombat();
 
         // --- Dibujo ---
@@ -122,7 +119,7 @@ void GameWindow::run() {
 
 // Genera un nuevo enemigo y lo agrega al vector de enemigos
 void GameWindow::spawnEnemy() {
-    Enemy e(0, 0, 100, 1, 'O'); // enemigo básico
+    Enemy e(0, 0, 0, 0, 'O'); // enemigo básico
     std::vector<std::pair<int, int>> rawPath = map.findPath(e);
 
     if (rawPath.empty()) {
@@ -134,7 +131,19 @@ void GameWindow::spawnEnemy() {
     for (const auto& p : rawPath)
         path.push_back(sf::Vector2i(p.second, p.first)); // columna=x, fila=y
 
-    enemies.push_back(new EnemyUnit(path, tileSize));
+    if (enemyCounter < 5) {
+        enemies.push_back(new EnemyUnit(path, tileSize, 'O'));
+        enemyCounter++;
+    } else if (enemyCounter >= 5 && enemyCounter < 10) {
+        enemies.push_back(new EnemyUnit(path, tileSize, 'E'));
+        enemyCounter++;
+    } else if (enemyCounter >= 10 && enemyCounter < 15) {
+        enemies.push_back(new EnemyUnit(path, tileSize, 'H'));
+        enemyCounter++;
+    } else if (enemyCounter >= 15) {
+        enemies.push_back(new EnemyUnit(path, tileSize, 'M'));
+        enemyCounter++;
+    }
     std::cout << "Enemigo creado. Total enemigos: " << enemies.size() << "\n";
 }
 

@@ -6,11 +6,32 @@
 #include <cmath>
 #include <iostream>
 
-EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize)
+EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char type)
     : path(path), currentIndex(0), speed(10.f), tileSize(tileSize), health(1000) {
 
+    switch (type) {
+        case 'O':
+            speed = 1.f;
+            color = sf::Color::White;
+            break;
+        case 'E':
+            speed = 0.25f;
+            color = sf::Color::Green;
+            break;
+        case 'H':
+            speed = 0.5f;
+            color = sf::Color::Yellow;
+            break;
+        case 'M':
+            speed = 0.5f;
+            color = sf::Color::Blue;
+            break;
+        default:
+            break;
+    }
+
     shape.setRadius(tileSize / 4);
-    shape.setFillColor(sf::Color::Yellow);
+    shape.setFillColor(color);
     shape.setOrigin(shape.getRadius(), shape.getRadius());
 
     if (!path.empty()) {
@@ -26,7 +47,7 @@ void EnemyUnit::update() {
     if (currentIndex + 1 >= path.size()) return;
 
     float dt = clock.getElapsedTime().asSeconds();
-    if (dt < 0.1f) return;
+    if (dt < speed) return;
 
     clock.restart();
 

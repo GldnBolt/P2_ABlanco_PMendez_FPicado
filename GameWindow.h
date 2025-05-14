@@ -22,6 +22,7 @@ private:
     std::vector<Shot> activeShots;
     std::vector<EnemyUnit*> enemies;
     sf::Clock spawnClock;
+    int enemyCounter=0;
 
     // 🧱 Texturas del mapa
     sf::Texture texGrass, texGrass2;
