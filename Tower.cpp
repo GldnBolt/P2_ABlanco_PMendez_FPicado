@@ -7,17 +7,17 @@ Tower::Tower(int x, int y, char type, int specialCooldown)
         case 'S': // Sniper
             range = 3;
         damage = 15;
-        attackCooldown = 1.0f;
+        attackCooldown = 1.5f;
         break;
         case 'M': // Mage
             range = 3;
         damage = 10;
-        attackCooldown = 0.95f;
+        attackCooldown = 1.0f;
         break;
         case 'A': // Archer
             range = 3;
         damage = 5;
-        attackCooldown = 0.98f;
+        attackCooldown = 0.6f;
         break;
         default:
             range = 3;

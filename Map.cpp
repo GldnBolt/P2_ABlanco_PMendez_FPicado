@@ -155,5 +155,18 @@ std::vector<Tower>& Map::getTowers() {
     return towers;
 }
 
+void Map::clearTowers() {
+    // Quita todas las torres del grid
+    for (const Tower& t : towers) {
+        if (grid[t.row][t.col] == t.type) {
+            grid[t.row][t.col] = '.'; // celda vacía
+        }
+    }
+
+    // Limpia la lista de torres
+    towers.clear();
+}
+
+
 
 

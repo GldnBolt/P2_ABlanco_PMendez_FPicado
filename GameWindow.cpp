@@ -8,6 +8,7 @@
 #include <cmath>
 #include <vector>
 #include "Projectile.h"
+#include <sstream>
 
 // Constructor
 GameWindow::GameWindow(Map& mapRef)
@@ -18,8 +19,6 @@ GameWindow::GameWindow(Map& mapRef)
 
     // Carga de texturas
     texCastle.loadFromFile("Sprites/tree.png");
-    texPortal.loadFromFile("Sprites/portal.png");
-
     texGrass.loadFromFile("Sprites/grass.png");
     texGrass2.loadFromFile("Sprites/grass2.png");
 
@@ -45,10 +44,10 @@ GameWindow::GameWindow(Map& mapRef)
 
     // Fuente para el HUD
     if (!font.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/P2_ABlanco_PMendez_FPicado/assets/ARIAL.TTF")) {
-        std::cout << "❌ Error al cargar la fuente\n";
+        std::cout << "Error al cargar la fuente\n";
     }
     else {
-        std::cout << "✅ Fuente cargada correctamente\n";
+        std::cout << "Fuente cargada correctamente\n";
     }
 
     int hudX = 25 * 50 + 20;  // Posición X del panel lateral
@@ -70,6 +69,46 @@ GameWindow::GameWindow(Map& mapRef)
     textEnemigos.setCharacterSize(24);
     textEnemigos.setFillColor(sf::Color::White);
     textEnemigos.setPosition(hudX, 110);
+
+    // Barra de vida (fondo y frente)
+    hpBarBack.setSize(sf::Vector2f(200, 20));
+    hpBarBack.setFillColor(sf::Color(100, 100, 100));
+    hpBarBack.setPosition(cols * tileSize + 20, 150);
+
+    hpBarFront.setSize(sf::Vector2f(200, 20));
+    hpBarFront.setFillColor(sf::Color::Red);
+    hpBarFront.setPosition(cols * tileSize + 20, 150);
+
+    // Texto "GAME OVER"
+    gameOverText.setFont(font);
+    gameOverText.setCharacterSize(32);
+    gameOverText.setFillColor(sf::Color::Red);
+    gameOverText.setString("GAME OVER");
+    gameOverText.setPosition(cols * tileSize + 20, 200);
+
+    countdownText.setFont(font);
+    countdownText.setCharacterSize(24);
+    countdownText.setFillColor(sf::Color::White);
+    countdownText.setPosition(cols * tileSize + 20, 240);
+    countdownText.setString(""); // inicial vacío
+
+    botonMejorar.setSize(sf::Vector2f(200, 40));
+    botonMejorar.setFillColor(sf::Color(30, 130, 230)); // Azul fuerte
+    botonMejorar.setOutlineColor(sf::Color::White);
+    botonMejorar.setOutlineThickness(2);
+    botonMejorar.setPosition(cols * tileSize + 20, 300);
+
+    textoMejorar.setFont(font);
+    textoMejorar.setCharacterSize(20);
+    textoMejorar.setFillColor(sf::Color::White);
+    textoMejorar.setStyle(sf::Text::Bold);
+    textoMejorar.setString("Mejorar torre");
+    textoMejorar.setPosition(cols * tileSize + 30, 305);
+
+    textoInfoTorre.setFont(font);
+    textoInfoTorre.setCharacterSize(20);
+    textoInfoTorre.setFillColor(sf::Color::White);
+    textoInfoTorre.setPosition(cols * tileSize + 20, 220);
 
     std::cout << "Creando ventana de juego\n";
 }
@@ -96,23 +135,70 @@ void GameWindow::run() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Num1) torreSeleccionada = 'A';
-                if (event.key.code == sf::Keyboard::Num2) torreSeleccionada = 'M';
-                if (event.key.code == sf::Keyboard::Num3) torreSeleccionada = 'S';
+            if (gameOver) {
+                // Aún se dibujan cosas, pero no se actualiza el mundo
+                window.clear(sf::Color(80, 200, 120));
+                drawMap();
+                drawTowers();
+                for (auto& enemy : enemies) enemy->draw(window);
+                for (auto& p : projectiles) p.draw(window);
+                window.draw(hpBarBack);
+                window.draw(hpBarFront);
+                window.draw(gameOverText);
+                window.draw(countdownText);
+                window.display();
+                continue;
             }
 
-            // Clic izquierdo para colocar torres
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Num1) tipoTorreSeleccionada = 'A';
+                if (event.key.code == sf::Keyboard::Num2) tipoTorreSeleccionada = 'M';
+                if (event.key.code == sf::Keyboard::Num3) tipoTorreSeleccionada = 'S';
+
+            }
+
+            // Clic izquierdo para colocar torres o seleccionar
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
+                sf::Vector2f mouseF(static_cast<float>(mousePixel.x), static_cast<float>(mousePixel.y));
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
 
-                Tower t(cell.x, cell.y, torreSeleccionada, 10);
-                int costo = t.getCost();
+                // 🔹 Clic en botón de mejora
+                if (botonMejorar.getGlobalBounds().contains(mouseF)) {
+                    if (torreSeleccionadaIndex >= 0 && torreSeleccionadaIndex < static_cast<int>(map.getTowers().size())) {
+                        Tower& torre = map.getTowers()[torreSeleccionadaIndex];
+                        if (torre.level < 3 && playerGold >= torre.upgradeCost) {
+                            if (torre.upgrade(playerGold)) {
+                                std::cout << "🔧 Torre mejorada a nivel " << torre.level << "\n";
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                // 🔹 Si clic fue en el panel derecho (HUD), no hacer nada
+                if (mouseF.x >= cols * tileSize)
+                    return;
+
+                // 🔹 Selección de torre
+                torreSeleccionadaIndex = -1;
+                const auto& torres = map.getTowers();
+                for (size_t i = 0; i < torres.size(); ++i) {
+                    if (torres[i].row == cell.y && torres[i].col == cell.x) {
+                        torreSeleccionadaIndex = static_cast<int>(i);
+                        std::cout << "📍 Torre seleccionada en (" << torres[i].row << "," << torres[i].col << "), nivel " << torres[i].level << "\n";
+                        return;
+                    }
+                }
+
+                // 🔹 Colocar nueva torre
+                Tower nueva(cell.x, cell.y, tipoTorreSeleccionada, 10);
+                int costo = nueva.getCost();
 
                 if (playerGold < costo) {
-                    std::cout << "No tienes suficiente oro para torre tipo " << torreSeleccionada << " (costo: " << costo << ")\n";
-                    continue;
+                    std::cout << "❌ No tienes suficiente oro para torre tipo " << tipoTorreSeleccionada
+                              << " (costo: " << costo << ")\n";
+                    return;
                 }
 
                 bool ocupado = false;
@@ -127,14 +213,25 @@ void GameWindow::run() {
                 }
 
                 if (ocupado) {
-                    std::cout << "No se puede colocar torre: un enemigo está sobre esa celda.\n";
-                } else if (map.placeTower(cell.y, cell.x, t)) {
+                    std::cout << "❌ No se puede colocar torre: un enemigo está sobre esa celda.\n";
+                } else if (map.placeTower(cell.y, cell.x, nueva)) {
                     playerGold -= costo;
-                    std::cout << "Torre tipo " << torreSeleccionada << " colocada en (" << cell.y << ", " << cell.x << "). Oro restante: " << playerGold << "\n";
+                    std::cout << "✅ Torre tipo " << tipoTorreSeleccionada << " colocada en ("
+                              << cell.y << ", " << cell.x << "). Oro restante: " << playerGold << "\n";
+
+                    // Reseleccionar la torre recién colocada
+                    const auto& nuevasTorres = map.getTowers();
+                    for (size_t i = 0; i < nuevasTorres.size(); ++i) {
+                        if (nuevasTorres[i].row == cell.y && nuevasTorres[i].col == cell.x) {
+                            torreSeleccionadaIndex = static_cast<int>(i);
+                            break;
+                        }
+                    }
                 } else {
-                    std::cout << "No se pudo colocar torre\n";
+                    std::cout << "❌ No se pudo colocar torre\n";
                 }
             }
+
         }
 
         // --- Lógica de juego ---
@@ -167,6 +264,9 @@ void GameWindow::run() {
         textOleada.setString("Oleada: " + std::to_string(oleada));
         textEnemigos.setString("Enemigos: " + std::to_string(enemies.size()));
 
+        float hpRatio = static_cast<float>(playerHP) / 1000.f;
+        hpBarFront.setSize(sf::Vector2f(200.f * hpRatio, 20.f));
+
         // --- Dibujo ---
         window.clear(sf::Color(80, 200, 120)); // fondo menta claro
 
@@ -184,6 +284,47 @@ void GameWindow::run() {
 
         for (auto& p : projectiles)
             p.draw(window);
+
+        window.draw(hpBarBack);
+        window.draw(hpBarFront);
+
+        if (gameOver) {
+            window.draw(gameOverText);
+        }
+
+        if (gameOver) {
+            float elapsed = gameOverClock.getElapsedTime().asSeconds();
+            float remaining = countdownTime - elapsed;
+
+            if (remaining > 0) {
+                countdownText.setString("Reiniciando en: " + std::to_string(static_cast<int>(std::ceil(remaining))) + "s");
+            } else {
+                resetGame();
+            }
+
+            window.draw(countdownText);
+        }
+
+        // Mostrar info de la torre seleccionada
+        if (torreSeleccionadaIndex >= 0 && torreSeleccionadaIndex < static_cast<int>(map.getTowers().size())) {
+            Tower& torre = map.getTowers()[torreSeleccionadaIndex];
+
+            std::ostringstream info;
+            info << "Torre seleccionada\n"
+                 << "Nivel: " << torre.level << "\n"
+                 << "Daño: " << torre.damage << "\n"
+                 << "Alcance: " << torre.range << "\n"
+                 << "Cooldown: " << torre.attackCooldown << "s\n"
+                 << "Costo Mejora: " << torre.upgradeCost;
+
+            textoInfoTorre.setString(info.str());
+            window.draw(textoInfoTorre);
+
+            if (torre.level < 3 && playerGold >= torre.upgradeCost) {
+                window.draw(botonMejorar);
+                window.draw(textoMejorar);
+            }
+        }
 
         // Dibujar HUD
         window.draw(textOro);
@@ -307,6 +448,21 @@ void GameWindow::updateCombat() {
             }
         }
 
+        if (enemy->hasReachedEnd()) {
+            playerHP -= 50;
+            std::cout << "💥 Enemigo alcanzó el castillo. Vida restante: " << playerHP << "\n";
+
+            if (playerHP <= 0 && !gameOver) {
+                gameOver = true;
+                playerHP = 0;
+                std::cout << "❌ GAME OVER\n";
+                gameOverClock.restart(); // inicia el conteo de 5s
+            }
+
+            delete enemy;
+            continue;
+        }
+
         if (enemy->isAlive()) {
             vivos.push_back(enemy);
         } else {
@@ -323,8 +479,6 @@ void GameWindow::updateCombat() {
 
     enemies = vivos;
 }
-
-
 
 void GameWindow::drawTowers() {
     for (const auto& tower : map.getTowers()) {
@@ -369,6 +523,20 @@ void GameWindow::drawTowers() {
         window.draw(sprite);
     }
 }
+
+void GameWindow::resetGame() {
+    enemies.clear();
+    projectiles.clear();
+    playerGold = 50;
+    playerHP = 1000;
+    oleada = 1;
+    enemyCounter = 0;
+    gameOver = false;
+    map.clearTowers();  // Necesitas implementar este método
+    gameOverClock.restart();
+    std::cout << "🔄 Juego reiniciado\n";
+}
+
 
 
 

@@ -21,11 +21,21 @@ private:
     const int rows = 15;
     const int cols = 25;
 
+    sf::Clock gameOverClock;
+    float countdownTime = 5.0f;
+    sf::Text countdownText;
+
     std::vector<Shot> activeShots;
     std::vector<EnemyUnit*> enemies;
     sf::Clock spawnClock;
     int enemyCounter = 0;
     int playerGold = 50;
+
+    int playerHP = 1000;
+    sf::RectangleShape hpBarBack;
+    sf::RectangleShape hpBarFront;
+    sf::Text gameOverText;
+    bool gameOver = false;
 
     // 🧱 Texturas del mapa
     sf::Texture texGrass, texGrass2;
@@ -39,14 +49,18 @@ private:
     sf::Texture texPortal;
     sf::Texture texBulletA, texRocketM, texMissileS;
     std::vector<Projectile> projectiles;
-
+    sf::RectangleShape botonMejorar;
+    sf::Text textoMejorar;
+    sf::Text textoInfoTorre;
 
     sf::Font font;
     sf::Text textOro;
     sf::Text textOleada;
     sf::Text textEnemigos;
     int oleada = 1;
-    char torreSeleccionada = 'A'; // por defecto
+    char tipoTorreSeleccionada = 'A';
+    int torreSeleccionadaIndex = -1;
+
 
 
 public:
@@ -58,6 +72,8 @@ public:
     sf::Vector2i getCellFromMouse(const sf::Vector2i& mousePos);
     void spawnEnemy();
     void updateCombat();
+    void resetGame();
+
 };
 
 #endif

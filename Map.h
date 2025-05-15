@@ -31,7 +31,7 @@ public:
     void printTowers() const;
     std::vector<std::pair<int, int>> findPath(Enemy& enemy);
     std::vector<Tower>& getTowers();
-
+    void clearTowers();
 
 };
 
