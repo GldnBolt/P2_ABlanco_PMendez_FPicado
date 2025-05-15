@@ -34,8 +34,11 @@ GameWindow::GameWindow(Map& mapRef)
     texTree.loadFromFile("Sprites/tree.png");
 
     // Fuente para el HUD
-    if (!font.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/Assets/arial.ttf")) {
-        std::cout << "Error al cargar la fuente\n";
+    if (!font.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/P2_ABlanco_PMendez_FPicado/assets/ARIAL.TTF")) {
+        std::cout << "❌ Error al cargar la fuente\n";
+    }
+    else {
+        std::cout << "✅ Fuente cargada correctamente\n";
     }
 
     int hudX = 25 * 50 + 20;  // Posición X del panel lateral
@@ -48,26 +51,23 @@ GameWindow::GameWindow(Map& mapRef)
 
     // HUD: oleada
     textOleada.setFont(font);
-    textOleada.setCharacterSize(20);
+    textOleada.setCharacterSize(24);
     textOleada.setFillColor(sf::Color::Cyan);
     textOleada.setPosition(hudX, 70);
 
     // HUD: enemigos
     textEnemigos.setFont(font);
-    textEnemigos.setCharacterSize(20);
+    textEnemigos.setCharacterSize(24);
     textEnemigos.setFillColor(sf::Color::White);
     textEnemigos.setPosition(hudX, 110);
 
     std::cout << "Creando ventana de juego\n";
 }
 
-
 // Convierte la posición del mouse a coordenadas de celda
 sf::Vector2i GameWindow::getCellFromMouse(const sf::Vector2i& mousePos) {
     return sf::Vector2i(mousePos.x / tileSize, mousePos.y / tileSize);
 }
-
-
 
 // Método principal de loop gráfico
 void GameWindow::run() {
@@ -84,6 +84,13 @@ void GameWindow::run() {
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
+
+                // Verificar oro
+                if (playerGold < 10) {
+                    std::cout << "No tienes suficiente oro para colocar una torre.\n";
+                    continue;
+                }
+
                 Tower t(cell.x, cell.y, 'A', 10); // Torre básica
 
                 bool ocupado = false;
@@ -100,8 +107,8 @@ void GameWindow::run() {
                 if (ocupado) {
                     std::cout << "No se puede colocar torre: un enemigo está sobre esa celda.\n";
                 } else if (map.placeTower(cell.y, cell.x, t)) {
-                    std::cout << "Torre colocada en (" << cell.y << ", " << cell.x << ")\n";
-                    playerGold -= 10; // costo por torre
+                    playerGold -= 10;
+                    std::cout << "Torre colocada en (" << cell.y << ", " << cell.x << "). Oro restante: " << playerGold << "\n";
                 } else {
                     std::cout << "No se pudo colocar torre\n";
                 }
@@ -109,8 +116,6 @@ void GameWindow::run() {
         }
 
         // --- Lógica de juego ---
-
-        // Crear nuevo enemigo cada 2 segundos
         if (spawnClock.getElapsedTime().asSeconds() > 2.0f) {
             spawnEnemy();
             spawnClock.restart();
@@ -121,7 +126,7 @@ void GameWindow::run() {
 
         updateCombat();
 
-        // Actualizar HUD
+        // --- HUD dinámico ---
         textOro.setString("Oro: " + std::to_string(playerGold));
         textOleada.setString("Oleada: " + std::to_string(oleada));
         textEnemigos.setString("Enemigos: " + std::to_string(enemies.size()));
@@ -129,11 +134,11 @@ void GameWindow::run() {
         // --- Dibujo ---
         window.clear(sf::Color(80, 200, 120)); // fondo menta claro
 
+        // Panel lateral
         sf::RectangleShape panelBG(sf::Vector2f(300, rows * tileSize));
         panelBG.setPosition(cols * tileSize, 0);
         panelBG.setFillColor(sf::Color(60, 60, 60));
         window.draw(panelBG);
-
 
         drawMap();
         drawTowers();
@@ -159,7 +164,6 @@ void GameWindow::run() {
         window.display();
     }
 }
-
 
 // Genera un nuevo enemigo y lo agrega al vector de enemigos
 void GameWindow::spawnEnemy() {
@@ -226,7 +230,6 @@ void GameWindow::drawMap() {
         }
     }
 }
-
 
 // Actualiza el combate: verifica si los enemigos están dentro del rango de ataque de las torres
 void GameWindow::updateCombat() {
