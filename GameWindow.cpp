@@ -6,6 +6,8 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <vector>
+#include "Projectile.h"
 
 // Constructor
 GameWindow::GameWindow(Map& mapRef)
@@ -30,7 +32,15 @@ GameWindow::GameWindow(Map& mapRef)
         texRoad[i].loadFromFile("Sprites/road" + std::to_string(i + 1) + ".png");
     }
 
-    texTowerLvl1.loadFromFile("Sprites/tower_lvl1.png");
+    texTowerA.loadFromFile("Sprites/tower_lvl1.png");
+    texTowerM.loadFromFile("Sprites/tower_lvl2.png");
+    texTowerS.loadFromFile("Sprites/tower_lvl3.png");
+
+    texBulletA.loadFromFile("Sprites/bullet_A.png");
+    texRocketM.loadFromFile("Sprites/rocket_M.png");
+    texMissileS.loadFromFile("Sprites/missile_S.png");
+
+
     texTree.loadFromFile("Sprites/tree.png");
 
     // Fuente para el HUD
@@ -72,26 +82,38 @@ sf::Vector2i GameWindow::getCellFromMouse(const sf::Vector2i& mousePos) {
 // Método principal de loop gráfico
 void GameWindow::run() {
     std::cout << "Entrando al bucle principal\n";
+    sf::Clock clock;
 
     while (window.isOpen()) {
+        float dt = clock.restart().asSeconds();
+
+        for (auto& p : projectiles)
+            p.update(dt);
+
         // --- Manejo de eventos ---
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
 
+            if (event.type == sf::Event::KeyPressed) {
+                if (event.key.code == sf::Keyboard::Num1) torreSeleccionada = 'A';
+                if (event.key.code == sf::Keyboard::Num2) torreSeleccionada = 'M';
+                if (event.key.code == sf::Keyboard::Num3) torreSeleccionada = 'S';
+            }
+
             // Clic izquierdo para colocar torres
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
 
-                // Verificar oro
-                if (playerGold < 10) {
-                    std::cout << "No tienes suficiente oro para colocar una torre.\n";
+                Tower t(cell.x, cell.y, torreSeleccionada, 10);
+                int costo = t.getCost();
+
+                if (playerGold < costo) {
+                    std::cout << "No tienes suficiente oro para torre tipo " << torreSeleccionada << " (costo: " << costo << ")\n";
                     continue;
                 }
-
-                Tower t(cell.x, cell.y, 'A', 10); // Torre básica
 
                 bool ocupado = false;
                 for (auto& enemy : enemies) {
@@ -107,8 +129,8 @@ void GameWindow::run() {
                 if (ocupado) {
                     std::cout << "No se puede colocar torre: un enemigo está sobre esa celda.\n";
                 } else if (map.placeTower(cell.y, cell.x, t)) {
-                    playerGold -= 10;
-                    std::cout << "Torre colocada en (" << cell.y << ", " << cell.x << "). Oro restante: " << playerGold << "\n";
+                    playerGold -= costo;
+                    std::cout << "Torre tipo " << torreSeleccionada << " colocada en (" << cell.y << ", " << cell.x << "). Oro restante: " << playerGold << "\n";
                 } else {
                     std::cout << "No se pudo colocar torre\n";
                 }
@@ -124,7 +146,21 @@ void GameWindow::run() {
         for (auto& enemy : enemies)
             enemy->update();
 
+        for (auto& tower : map.getTowers())
+            const_cast<Tower&>(tower).lastAttackTime += dt;
+
         updateCombat();
+
+        // Actualizar proyectiles animados
+        for (auto& p : projectiles)
+            p.update(dt);
+
+        // Eliminar proyectiles que llegaron a su destino
+        projectiles.erase(
+            std::remove_if(projectiles.begin(), projectiles.end(),
+                           [](Projectile& p) { return p.hasHit(); }),
+            projectiles.end()
+        );
 
         // --- HUD dinámico ---
         textOro.setString("Oro: " + std::to_string(playerGold));
@@ -146,15 +182,8 @@ void GameWindow::run() {
         for (auto& enemy : enemies)
             enemy->draw(window);
 
-        for (const auto& shot : activeShots) {
-            sf::Vertex line[] = {
-                sf::Vertex(shot.from, sf::Color::Cyan),
-                sf::Vertex(shot.to, sf::Color::Cyan)
-            };
-            window.draw(line, 2, sf::Lines);
-        }
-
-        activeShots.clear();
+        for (auto& p : projectiles)
+            p.draw(window);
 
         // Dibujar HUD
         window.draw(textOro);
@@ -167,7 +196,7 @@ void GameWindow::run() {
 
 // Genera un nuevo enemigo y lo agrega al vector de enemigos
 void GameWindow::spawnEnemy() {
-    Enemy e(0, 0, 0, 0, 'O'); // enemigo básico
+    Enemy e(0, 0, 1000, 1, 'O'); // estructura temporal solo para path
     std::vector<std::pair<int, int>> rawPath = map.findPath(e);
 
     if (rawPath.empty()) {
@@ -179,20 +208,22 @@ void GameWindow::spawnEnemy() {
     for (const auto& p : rawPath)
         path.push_back(sf::Vector2i(p.second, p.first)); // columna=x, fila=y
 
-    if (enemyCounter < 3) {
-        enemies.push_back(new EnemyUnit(path, tileSize, 'O'));
-        enemyCounter++;
-    } else if (enemyCounter >= 3 && enemyCounter < 6) {
-        enemies.push_back(new EnemyUnit(path, tileSize, 'E'));
-        enemyCounter++;
-    } else if (enemyCounter >= 6 && enemyCounter < 9) {
-        enemies.push_back(new EnemyUnit(path, tileSize, 'H'));
-        enemyCounter++;
-    } else if (enemyCounter >= 9) {
-        enemies.push_back(new EnemyUnit(path, tileSize, 'M'));
-        enemyCounter++;
+    // Rotar tipo de enemigo para variedad
+    static int count = 0;
+    char tipo;
+    int categoria;
+
+    switch (count % 4) {
+        case 0: tipo = 'O'; categoria = 1; break;
+        case 1: tipo = 'E'; categoria = 2; break;
+        case 2: tipo = 'H'; categoria = 2; break;
+        case 3: tipo = 'M'; categoria = 3; break;
     }
-    std::cout << "Enemigo creado. Total enemigos: " << enemies.size() << "\n";
+
+    enemies.push_back(new EnemyUnit(path, tileSize, tipo, categoria));
+    count++;
+
+    std::cout << "👾 Enemigo tipo " << tipo << ", categoría " << categoria << " generado.\n";
 }
 
 // Dibuja el mapa y las torres
@@ -238,42 +269,72 @@ void GameWindow::updateCombat() {
     for (auto& enemy : enemies) {
         bool fueAtacado = false;
 
-        for (const auto& tower : map.getTowers()) {
+        for (auto& tower : map.getTowers()) {
             sf::Vector2i enemyGrid = enemy->getGridPosition();
             int dx = enemyGrid.x - tower.col;
             int dy = enemyGrid.y - tower.row;
             int distancia2 = dx * dx + dy * dy;
 
             if (distancia2 <= tower.range * tower.range) {
-                if (distancia2 <= tower.range * tower.range) {
-                    enemy->takeDamage(tower.damage, 'M');
+                // Verifica cooldown
+                if (tower.lastAttackTime >= tower.attackCooldown) {
+                    // Ataque con posibilidad de especial
+                    float chance = static_cast<float>(rand()) / RAND_MAX;
+                    int damage = (chance < tower.specialChance)
+                                 ? tower.damage * 2
+                                 : tower.damage;
 
-                    Shot s;
-                    s.from = sf::Vector2f(tower.col * tileSize + tileSize / 2,
-                                          tower.row * tileSize + tileSize / 2);
-                    s.to = enemy->getPosition();
-                    activeShots.push_back(s);
+                    enemy->takeDamage(damage, tower.type);
+                    tower.lastAttackTime = 0.f;  // reinicia cooldown
 
-                    fueAtacado = true;
-                    break;
+                    // Seleccionar textura según tipo de torre
+                    sf::Texture* tex = nullptr;
+                    switch (tower.type) {
+                        case 'A': tex = &texBulletA; break;
+                        case 'M': tex = &texRocketM; break;
+                        case 'S': tex = &texMissileS; break;
+                    }
+
+                    // Crear y agregar proyectil
+                    sf::Vector2f from = sf::Vector2f(tower.col * tileSize + tileSize / 2,
+                                                     tower.row * tileSize + tileSize / 2);
+                    sf::Vector2f to = enemy->getPosition();
+                    projectiles.emplace_back(*tex, from, to, tower.type, tower.rotation);
                 }
 
+                fueAtacado = true;
+                break;
             }
         }
 
-        if (enemy->isAlive())
+        if (enemy->isAlive()) {
             vivos.push_back(enemy);
-        else
-            delete enemy; // libera memoria
+        } else {
+            int categoria = enemy->getCategoria();
+            char tipo = enemy->getTipo();
+            int oroGanado = map.getTowers()[0].calculateGoldReward(tipo, categoria);
+
+            playerGold += oroGanado;
+            enemyCounter++;
+            std::cout << "💰 Enemigo eliminado. +" << oroGanado << " oro. Total: " << playerGold << "\n";
+            delete enemy;
+        }
     }
 
     enemies = vivos;
 }
 
+
+
 void GameWindow::drawTowers() {
     for (const auto& tower : map.getTowers()) {
         sf::Sprite sprite;
-        sprite.setTexture(texTowerLvl1);
+        switch (tower.type) {
+            case 'A': sprite.setTexture(texTowerA); break;
+            case 'M': sprite.setTexture(texTowerM); break;
+            case 'S': sprite.setTexture(texTowerS); break;
+            default:  sprite.setTexture(texTowerA); break;
+        }
         sprite.setOrigin(tileSize / 2, tileSize / 2);
         sprite.setPosition(tower.col * tileSize + tileSize / 2,
                            tower.row * tileSize + tileSize / 2);

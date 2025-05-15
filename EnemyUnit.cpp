@@ -1,37 +1,33 @@
-//
-// Created by Xpc on 10/5/2025.
-//
-
 #include "EnemyUnit.h"
 #include <cmath>
 #include <iostream>
 
-EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char type)
-    : path(path), currentIndex(0), speed(10.f), tileSize(tileSize), health(1000) {
+EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char type, int category)
+    : path(path), currentIndex(0), tileSize(tileSize), type(type), category(category), health(1000) {
 
     switch (type) {
-        case 'O':
+        case 'O': // Ogro
             speed = 0.75f;
             arrowResistance = 0.5f;
             magicResistance = 2.f;
             artilleryResistance = 2.f;
             color = sf::Color::White;
             break;
-        case 'E':
+        case 'E': // Esqueleto
             speed = 0.25f;
             arrowResistance = 2.f;
             magicResistance = 0.5f;
             artilleryResistance = 2.f;
             color = sf::Color::Green;
             break;
-        case 'H':
+        case 'H': // Humano
             speed = 0.5f;
             arrowResistance = 1.f;
             magicResistance = 1.f;
             artilleryResistance = 0.f;
             color = sf::Color::Yellow;
             break;
-        case 'M':
+        case 'M': // Mago oscuro
             speed = 0.5f;
             arrowResistance = 0.5f;
             magicResistance = 2.f;
@@ -39,6 +35,11 @@ EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char t
             color = sf::Color::Blue;
             break;
         default:
+            speed = 0.5f;
+            arrowResistance = 1.f;
+            magicResistance = 1.f;
+            artilleryResistance = 1.f;
+            color = sf::Color::Red;
             break;
     }
 
@@ -90,15 +91,19 @@ int EnemyUnit::getHealth() const {
 void EnemyUnit::takeDamage(int dmg, char damageType) {
     switch (damageType) {
         case 'B':
-            health -= dmg*arrowResistance;
+            health -= dmg * arrowResistance;
             break;
         case 'A':
-            health -= dmg*artilleryResistance;
+            health -= dmg * artilleryResistance;
             break;
         case 'M':
-            health -= dmg*magicResistance;
+            health -= dmg * magicResistance;
+            break;
+        default:
+            health -= dmg;
             break;
     }
+
     if (health < 0) health = 0;
 }
 
@@ -111,4 +116,10 @@ sf::Vector2i EnemyUnit::getGridPosition() const {
                         static_cast<int>(position.y) / tileSize);
 }
 
+char EnemyUnit::getTipo() const {
+    return type;
+}
 
+int EnemyUnit::getCategoria() const {
+    return category;
+}

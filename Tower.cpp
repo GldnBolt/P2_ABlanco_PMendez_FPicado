@@ -1,34 +1,49 @@
-//
-// Created by Xpc on 10/5/2025.
-//
-
 #include "Tower.h"
 
 Tower::Tower(int x, int y, char type, int specialCooldown)
-    : row(x), col(y), type(type), specialCooldown(specialCooldown){
+    : row(x), col(y), type(type), specialCooldown(specialCooldown) {
 
     switch (type) {
-        case 'S':
-            range = 7;
-            damage = 5;
-            attackCooldown = 1;
-            break;
-        case 'M':
-            range = 5;
-            damage = 10;
-            attackCooldown = 2;
-            break;
-        case 'A':
+        case 'S': // Sniper
             range = 3;
-            damage = 20;
-            attackCooldown = 3;
-            break;
+        damage = 15;
+        attackCooldown = 1.0f;
+        break;
+        case 'M': // Mage
+            range = 3;
+        damage = 10;
+        attackCooldown = 0.95f;
+        break;
+        case 'A': // Archer
+            range = 3;
+        damage = 5;
+        attackCooldown = 0.98f;
+        break;
+        default:
+            range = 3;
+        damage = 5;
+        attackCooldown = 2;
     }
 }
 
 int Tower::calculateGoldReward(char enemyType, int enemyCategory) const {
-    int baseReward = 10;
-    int categoryBonus = enemyCategory * 5;
-    return baseReward + categoryBonus;
+    int base = 5;
+    int typeBonus = (type == 'A') ? 2 : (type == 'M') ? 3 : 1;
+    int categoryBonus = enemyCategory * 4;
+    return base + typeBonus + categoryBonus;
 }
 
+bool Tower::upgrade(int& playerGold) {
+    if (level >= 3) return false;
+    if (playerGold < upgradeCost) return false;
+
+    playerGold -= upgradeCost;
+    level++;
+    damage += 5;
+    attackCooldown = static_cast<int>(attackCooldown * 0.9f); // Reducción del 10%
+    range += 1;
+    specialChance += 0.05f;
+    upgradeCost += 15;
+
+    return true;
+}

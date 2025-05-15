@@ -30,7 +30,8 @@ public:
     void printMap() const;
     void printTowers() const;
     std::vector<std::pair<int, int>> findPath(Enemy& enemy);
-    const std::vector<Tower>& getTowers() const;
+    std::vector<Tower>& getTowers();
+
 
 };
 

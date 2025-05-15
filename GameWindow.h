@@ -5,6 +5,8 @@
 #include "Map.h"
 #include "EnemyUnit.h"
 #include <vector>
+#include "Projectile.h"
+
 
 struct Shot {
     sf::Vector2f from;
@@ -29,16 +31,23 @@ private:
     sf::Texture texGrass, texGrass2;
     sf::Texture texCornerTL, texCornerTR, texCornerBL, texCornerBR;
     sf::Texture texRoad[8];
-    sf::Texture texTowerLvl1;
+    sf::Texture texTowerA;
+    sf::Texture texTowerM;
+    sf::Texture texTowerS;
     sf::Texture texTree;
     sf::Texture texCastle;
     sf::Texture texPortal;
+    sf::Texture texBulletA, texRocketM, texMissileS;
+    std::vector<Projectile> projectiles;
+
 
     sf::Font font;
     sf::Text textOro;
     sf::Text textOleada;
     sf::Text textEnemigos;
     int oleada = 1;
+    char torreSeleccionada = 'A'; // por defecto
+
 
 public:
     GameWindow(Map& mapRef);

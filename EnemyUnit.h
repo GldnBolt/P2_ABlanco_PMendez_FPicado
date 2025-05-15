@@ -16,7 +16,7 @@ private:
     sf::Vector2f position; // posición en píxeles
     sf::Clock clock; // reloj para controlar el tiempo
     int tileSize; // tamaño de la celda en píxeles
-
+    int category; // categoría del enemigo
     int health = 100; // vida del enemigo
     float speed; // en píxeles por segundo
     int type; // tipo de enemigo
@@ -28,8 +28,10 @@ private:
 
 
 public:
-    EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char type);
+    EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char type, int category);
 
+    char getTipo() const;
+    int getCategoria() const;
     void update();                         // Mueve al enemigo paso a paso
     void draw(sf::RenderWindow& window);   // Lo dibuja en pantalla
     bool hasReachedEnd() const;            // Ya llegó al destino
