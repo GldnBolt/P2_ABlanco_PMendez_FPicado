@@ -30,6 +30,10 @@ private:
 public:
     EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char type, int category);
 
+
+    void setHealth(int h);
+    void setSpeed(float s);
+    void setResistances(float arrowRes, float magicRes, float artilleryRes);
     char getTipo() const;
     int getCategoria() const;
     void update();                         // Mueve al enemigo paso a paso

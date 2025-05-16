@@ -13,6 +13,19 @@ struct Shot {
     sf::Vector2f to;
 };
 
+struct Genome {
+    float health;
+    float speed;
+    float arrowRes;
+    float magicRes;
+    float artRes;
+    float fitness = 0.f;
+    bool reachedEnd = false;
+    char  type;
+    int category;
+};
+
+
 class GameWindow {
 private:
     sf::RenderWindow window;
@@ -61,6 +74,12 @@ private:
     char tipoTorreSeleccionada = 'A';
     int torreSeleccionadaIndex = -1;
 
+    std::vector<Genome> population;
+    int populationSize = 20;
+    float mutationChance = 0.1f;
+    // estadísticas
+    int muertosEstaOleada = 0;
+
 
 
 public:
@@ -73,6 +92,13 @@ public:
     void spawnEnemy();
     void updateCombat();
     void resetGame();
+
+    void inicializarPoblacion();
+    void spawnWave();                    // crea EnemyUnit a partir de poblacion[]
+    void calcularFitness();              // al terminar la oleada
+    void evolucionarPoblacion();         // selección + crossover + mutación
+    void nextGeneration();               // invoca calcularFitness() + evolucionarPoblacion() + spawnWave()
+
 
 };
 

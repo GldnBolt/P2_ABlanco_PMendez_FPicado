@@ -123,81 +123,99 @@ void GameWindow::run() {
     std::cout << "Entrando al bucle principal\n";
     sf::Clock clock;
 
+    // Inicializa la primera generación y lanza la oleada
+    inicializarPoblacion();
+    spawnWave();
+
     while (window.isOpen()) {
+        // Calcula delta-time
         float dt = clock.restart().asSeconds();
 
+        // Actualiza proyectiles antes de procesar eventos
         for (auto& p : projectiles)
             p.update(dt);
 
         // --- Manejo de eventos ---
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed) {
                 window.close();
+            }
 
+            // Si estamos en Game Over, sólo dibujar HUD y esperar reinicio
             if (gameOver) {
-                // Aún se dibujan cosas, pero no se actualiza el mundo
                 window.clear(sf::Color(80, 200, 120));
                 drawMap();
                 drawTowers();
-                for (auto& enemy : enemies) enemy->draw(window);
-                for (auto& p : projectiles) p.draw(window);
+                for (auto& enemy : enemies)   enemy->draw(window);
+                for (auto& p     : projectiles) p.draw(window);
                 window.draw(hpBarBack);
                 window.draw(hpBarFront);
                 window.draw(gameOverText);
                 window.draw(countdownText);
                 window.display();
+                // No procesamos más eventos en esta iteración
                 continue;
             }
 
+            // Selección de tipo de torre con teclas 1,2,3
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Num1) tipoTorreSeleccionada = 'A';
                 if (event.key.code == sf::Keyboard::Num2) tipoTorreSeleccionada = 'M';
                 if (event.key.code == sf::Keyboard::Num3) tipoTorreSeleccionada = 'S';
-
             }
 
-            // Clic izquierdo para colocar torres o seleccionar
-            if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+            // Clic izquierdo: mejora, selección o colocación
+            if (event.type == sf::Event::MouseButtonPressed
+             && event.mouseButton.button == sf::Mouse::Left) {
                 sf::Vector2i mousePixel = sf::Mouse::getPosition(window);
-                sf::Vector2f mouseF(static_cast<float>(mousePixel.x), static_cast<float>(mousePixel.y));
+                sf::Vector2f mouseF(static_cast<float>(mousePixel.x),
+                                    static_cast<float>(mousePixel.y));
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
 
-                // Clic en botón de mejora
+                // 1) Clic en el botón Mejorar
                 if (botonMejorar.getGlobalBounds().contains(mouseF)) {
-                    if (torreSeleccionadaIndex >= 0 && torreSeleccionadaIndex < static_cast<int>(map.getTowers().size())) {
+                    if (torreSeleccionadaIndex >= 0
+                     && torreSeleccionadaIndex < static_cast<int>(map.getTowers().size())) {
                         Tower& torre = map.getTowers()[torreSeleccionadaIndex];
-                        if (torre.level < 3 && playerGold >= torre.upgradeCost) {
-                            if (torre.upgrade(playerGold)) {
-                                std::cout << "Torre mejorada a nivel " << torre.level << "\n";
-                            }
+                        if (torre.level < 3
+                         && playerGold >= torre.upgradeCost
+                         && torre.upgrade(playerGold)) {
+                            std::cout << "Torre mejorada a nivel "
+                                      << torre.level << "\n";
                         }
                     }
-                    break;
+                    break;  // sale sólo del while(pollEvent)
                 }
 
-                // Si clic fue en el panel derecho (HUD), no hacer nada
+                // 2) Si clic fue en el panel HUD (derecha), ignorar
                 if (mouseF.x >= cols * tileSize)
                     break;
 
-                // Selección de torre
+                // 3) Intentar seleccionar torre existente
                 torreSeleccionadaIndex = -1;
                 const auto& torres = map.getTowers();
                 for (size_t i = 0; i < torres.size(); ++i) {
-                    if (torres[i].row == cell.y && torres[i].col == cell.x) {
+                    if (torres[i].row == cell.y
+                     && torres[i].col == cell.x) {
                         torreSeleccionadaIndex = static_cast<int>(i);
-                        std::cout << "Torre seleccionada en (" << torres[i].row << "," << torres[i].col << "), nivel " << torres[i].level << "\n";
+                        std::cout << "Torre seleccionada en ("
+                                  << torres[i].row << ","
+                                  << torres[i].col << "), nivel "
+                                  << torres[i].level << "\n";
                         break;
                     }
                 }
+                if (torreSeleccionadaIndex >= 0)
+                    break;  // sólo selección, no colocar
 
-                // 🔹 Colocar nueva torre
+                // 4) Colocar nueva torre
                 Tower nueva(cell.x, cell.y, tipoTorreSeleccionada, 10);
                 int costo = nueva.getCost();
-
                 if (playerGold < costo) {
-                    std::cout << "No tienes suficiente oro para torre tipo " << tipoTorreSeleccionada
-                              << " (costo: " << costo << ")\n";
+                    std::cout << "No tienes suficiente oro para torre tipo "
+                              << tipoTorreSeleccionada << " (costo: "
+                              << costo << ")\n";
                     break;
                 }
 
@@ -213,16 +231,18 @@ void GameWindow::run() {
                 }
 
                 if (ocupado) {
-                    std::cout << "❌ No se puede colocar torre: un enemigo está sobre esa celda.\n";
+                    std::cout << "No se puede colocar torre: un enemigo está encima.\n";
                 } else if (map.placeTower(cell.y, cell.x, nueva)) {
                     playerGold -= costo;
-                    std::cout << "Torre tipo " << tipoTorreSeleccionada << " colocada en ("
-                              << cell.y << ", " << cell.x << "). Oro restante: " << playerGold << "\n";
-
-                    // Reseleccionar la torre recién colocada
-                    const auto& nuevasTorres = map.getTowers();
-                    for (size_t i = 0; i < nuevasTorres.size(); ++i) {
-                        if (nuevasTorres[i].row == cell.y && nuevasTorres[i].col == cell.x) {
+                    std::cout << "Torre tipo " << tipoTorreSeleccionada
+                              << " colocada en (" << cell.y << ", "
+                              << cell.x << "). Oro restante: "
+                              << playerGold << "\n";
+                    // Reselecciona la recién colocada
+                    const auto& nt = map.getTowers();
+                    for (size_t i = 0; i < nt.size(); ++i) {
+                        if (nt[i].row == cell.y
+                         && nt[i].col == cell.x) {
                             torreSeleccionadaIndex = static_cast<int>(i);
                             break;
                         }
@@ -231,119 +251,105 @@ void GameWindow::run() {
                     std::cout << "No se pudo colocar torre\n";
                 }
             }
+        } // fin while pollEvent
 
+        // --- Lógica de oleadas con GA ---
+        bool oleadaTermino = std::all_of(
+            enemies.begin(), enemies.end(),
+            [](EnemyUnit* e){ return e->hasReachedEnd() || !e->isAlive(); }
+        );
+        if (oleadaTermino) {
+            nextGeneration();
         }
 
-        // --- Lógica de juego ---
-        if (spawnClock.getElapsedTime().asSeconds() > 2.0f) {
-            spawnEnemy();
-            spawnClock.restart();
-        }
-
-        for (auto& enemy : enemies)
-            enemy->update();
-
+        // Actualiza enemigos, torres y combate
+        for (auto& enemy : enemies) enemy->update();
         for (auto& tower : map.getTowers())
             const_cast<Tower&>(tower).lastAttackTime += dt;
-
         updateCombat();
 
-        // Actualizar proyectiles animados
-        for (auto& p : projectiles)
-            p.update(dt);
-
-        // Eliminar proyectiles que llegaron a su destino
+        // Actualiza y limpia proyectiles
+        for (auto& p : projectiles) p.update(dt);
         projectiles.erase(
             std::remove_if(projectiles.begin(), projectiles.end(),
-                           [](Projectile& p) { return p.hasHit(); }),
+                           [](Projectile& p){ return p.hasHit(); }),
             projectiles.end()
         );
 
-        // --- HUD dinámico ---
+        // --- Actualiza HUD dinámico ---
         textOro.setString("Oro: " + std::to_string(playerGold));
         textOleada.setString("Oleada: " + std::to_string(oleada));
         textEnemigos.setString("Enemigos: " + std::to_string(enemies.size()));
-
         float hpRatio = static_cast<float>(playerHP) / 1000.f;
         hpBarFront.setSize(sf::Vector2f(200.f * hpRatio, 20.f));
 
-        // --- Dibujo ---
-        window.clear(sf::Color(80, 200, 120)); // fondo menta claro
-
+        // --- Dibujado de todo ---
+        window.clear(sf::Color(80, 200, 120));
         // Panel lateral
-        sf::RectangleShape panelBG(sf::Vector2f(300, rows * tileSize));
+        sf::RectangleShape panelBG(
+            sf::Vector2f(300, rows * tileSize)
+        );
         panelBG.setPosition(cols * tileSize, 0);
         panelBG.setFillColor(sf::Color(60, 60, 60));
         window.draw(panelBG);
 
         drawMap();
         drawTowers();
-
-        for (auto& enemy : enemies)
-            enemy->draw(window);
-
-        for (auto& p : projectiles)
-            p.draw(window);
-
+        for (auto& enemy : enemies) enemy->draw(window);
+        for (auto& p     : projectiles) p.draw(window);
         window.draw(hpBarBack);
         window.draw(hpBarFront);
 
         if (gameOver) {
             window.draw(gameOverText);
         }
-
         if (gameOver) {
-            float elapsed = gameOverClock.getElapsedTime().asSeconds();
+            float elapsed   = gameOverClock.getElapsedTime().asSeconds();
             float remaining = countdownTime - elapsed;
-
             if (remaining > 0) {
-                countdownText.setString("Reiniciando en: " + std::to_string(static_cast<int>(std::ceil(remaining))) + "s");
+                countdownText.setString(
+                    "Reiniciando en: "
+                    + std::to_string(static_cast<int>(std::ceil(remaining)))
+                    + "s"
+                );
             } else {
                 resetGame();
             }
-
             window.draw(countdownText);
         }
 
-        // Mostrar info de la torre seleccionada
-        // Mostrar info de la torre seleccionada
-        if (torreSeleccionadaIndex >= 0 && torreSeleccionadaIndex < (int)map.getTowers().size()) {
+        // Mostrar info de la torre seleccionada + botón bajo el texto
+        if (torreSeleccionadaIndex >= 0
+         && torreSeleccionadaIndex < static_cast<int>(map.getTowers().size())) {
             Tower& torre = map.getTowers()[torreSeleccionadaIndex];
 
-            // 1) Generar la cadena
             std::ostringstream info;
             info << "Torre seleccionada\n"
-                 << "Nivel: " << torre.level << "\n"
-                 << "Dano: "  << torre.damage << "\n"
-                 << "Alcance: " << torre.range << "\n"
-                 << "Cooldown: " << torre.attackCooldown << "s\n"
+                 << "Nivel: "  << torre.level                     << "\n"
+                 << "Dano: "   << torre.damage                    << "\n"
+                 << "Alcance: "<< torre.range                     << "\n"
+                 << "Cooldown: "<< torre.attackCooldown << "s\n"
                  << "Costo Mejora: " << torre.upgradeCost;
 
             textoInfoTorre.setString(info.str());
-
-            // 2) Posicionar texto e imprimirlo
             float panelX = cols * tileSize + 20.f;
             float infoY  = 220.f;
             textoInfoTorre.setPosition(panelX, infoY);
             window.draw(textoInfoTorre);
 
-            // 3) Calcular el alto ocupado por el texto
             sf::FloatRect infoBounds = textoInfoTorre.getGlobalBounds();
-
-            // 4) Re-posicionar el botón justo debajo
             float btnX = panelX;
-            float btnY = infoBounds.top + infoBounds.height + 10.f;  // +10px de margen
+            float btnY = infoBounds.top + infoBounds.height + 10.f;
             botonMejorar.setPosition(btnX, btnY);
             textoMejorar.setPosition(btnX + 10.f, btnY + 8.f);
 
-            // 5) Dibujar botón + texto (si procede)
             if (torre.level < 3 && playerGold >= torre.upgradeCost) {
                 window.draw(botonMejorar);
                 window.draw(textoMejorar);
             }
         }
 
-        // Dibujar HUD
+        // Dibujar HUD numérico
         window.draw(textOro);
         window.draw(textOleada);
         window.draw(textEnemigos);
@@ -352,36 +358,104 @@ void GameWindow::run() {
     }
 }
 
-// Genera un nuevo enemigo y lo agrega al vector de enemigos
-void GameWindow::spawnEnemy() {
-    Enemy e(0, 0, 1000, 1, 'O'); // estructura temporal solo para path
-    std::vector<std::pair<int, int>> rawPath = map.findPath(e);
+void GameWindow::inicializarPoblacion() {
+    population.clear();
+    for (int i = 0; i < populationSize; ++i) {
+        Genome g;
+        g.health     = 1000.f;
+        g.speed      = 0.25f + static_cast<float>(rand())/RAND_MAX * 0.75f;
+        g.arrowRes   = 1.f;
+        g.magicRes   = 1.f;
+        g.artRes     = 1.f;
+        g.type       = 'O';       // por defecto ogro
+        g.category   = 1;
 
-    if (rawPath.empty()) {
-        std::cout << "No se puede generar enemigo: no hay camino\n";
-        return;
+        // Opcional: repartir tipos en la población
+        int r = rand() % 4;
+        switch (r) {
+            case 0: g.type = 'O'; g.category = 1; break;
+            case 1: g.type = 'E'; g.category = 2; break;
+            case 2: g.type = 'H'; g.category = 2; break;
+            case 3: g.type = 'M'; g.category = 3; break;
+        }
+
+        population.push_back(g);
+    }
+}
+
+void GameWindow::spawnWave() {
+    // 1) Limpia la oleada anterior
+    for (auto* e : enemies) delete e;
+    enemies.clear();
+    muertosEstaOleada = 0;
+
+    // 2) Para cada genoma en poblacion, crea un EnemyUnit
+    for (const auto& g : population) {
+        // genera el path con un Enemy temporal
+        Enemy temp(0, 0, static_cast<int>(g.health), 1, g.type);
+        auto rawPath = map.findPath(temp);
+        std::vector<sf::Vector2i> path;
+        path.reserve(rawPath.size());
+        for (auto& p : rawPath)
+            path.emplace_back(p.second, p.first);
+
+        // crea la unidad usando el tipo y categoría del genoma
+        EnemyUnit* e = new EnemyUnit(path, tileSize, g.type, g.category);
+
+        // aplica los atributos genéticos
+        e->setHealth(static_cast<int>(g.health));
+        e->setSpeed(g.speed);
+        e->setResistances(g.arrowRes, g.magicRes, g.artRes);
+
+        enemies.push_back(e);
     }
 
-    std::vector<sf::Vector2i> path;
-    for (const auto& p : rawPath)
-        path.push_back(sf::Vector2i(p.second, p.first)); // columna=x, fila=y
+    std::cout << "Oleada " << oleada << ": "
+              << enemies.size() << " enemigos spawned.\n";
+}
 
-    // Rotar tipo de enemigo para variedad
-    static int count = 0;
-    char tipo;
-    int categoria;
-
-    switch (count % 4) {
-        case 0: tipo = 'O'; categoria = 1; break;
-        case 1: tipo = 'E'; categoria = 2; break;
-        case 2: tipo = 'H'; categoria = 2; break;
-        case 3: tipo = 'M'; categoria = 3; break;
+void GameWindow::calcularFitness() {
+    // recorre enemies que murieron o llegaron
+    for (int i = 0; i < populationSize; ++i) {
+        // por ejemplo: fitness = cantidad viva al final (0 o 1) + frames sobrevividos
+        population[i].fitness = enemies[i]->isAlive() ? 1.f : 0.f;
+        population[i].reachedEnd = enemies[i]->hasReachedEnd();
     }
+}
 
-    enemies.push_back(new EnemyUnit(path, tileSize, tipo, categoria));
-    count++;
+void GameWindow::evolucionarPoblacion() {
+    // 1) Ordena por fitness descendente
+    std::sort(population.begin(), population.end(),
+              [](auto& a, auto& b){ return a.fitness > b.fitness; });
+    // 2) Elitismo: conserva top 2
+    std::vector<Genome> nueva;
+    nueva.push_back(population[0]);
+    nueva.push_back(population[1]);
+    // 3) Rellena el resto por crossover + mutación
+    while ((int)nueva.size() < populationSize) {
+        const Genome& padreA = population[rand() % (populationSize/2)];
+        const Genome& padreB = population[rand() % (populationSize/2)];
+        Genome hijo;
+        // simple promedio
+        hijo.health = (padreA.health + padreB.health)/2;
+        hijo.speed  = (padreA.speed  + padreB.speed )/2;
+        hijo.arrowRes = (padreA.arrowRes + padreB.arrowRes)/2;
+        hijo.magicRes = (padreA.magicRes + padreB.magicRes)/2;
+        hijo.artRes   = (padreA.artRes   + padreB.artRes  )/2;
+        // mutar
+        if ((rand()/(float)RAND_MAX) < mutationChance) {
+            hijo.speed += ((rand()/(float)RAND_MAX)-0.5f) * 0.2f;
+        }
+        nueva.push_back(hijo);
+    }
+    population.swap(nueva);
+}
 
-    std::cout << "👾 Enemigo tipo " << tipo << ", categoría " << categoria << " generado.\n";
+void GameWindow::nextGeneration() {
+    calcularFitness();
+    evolucionarPoblacion();
+    oleada++;
+    spawnWave();
 }
 
 // Dibuja el mapa y las torres

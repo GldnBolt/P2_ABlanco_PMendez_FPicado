@@ -123,3 +123,17 @@ char EnemyUnit::getTipo() const {
 int EnemyUnit::getCategoria() const {
     return category;
 }
+
+void EnemyUnit::setHealth(int h) {
+    health = h;
+}
+
+void EnemyUnit::setSpeed(float s) {
+    speed = s;
+}
+
+void EnemyUnit::setResistances(float arrowRes, float magicRes, float artilleryRes) {
+    arrowResistance     = arrowRes;
+    magicResistance     = magicRes;
+    artilleryResistance = artilleryRes;
+}
