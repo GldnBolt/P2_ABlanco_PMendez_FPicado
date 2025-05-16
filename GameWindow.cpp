@@ -163,31 +163,31 @@ void GameWindow::run() {
                 sf::Vector2f mouseF(static_cast<float>(mousePixel.x), static_cast<float>(mousePixel.y));
                 sf::Vector2i cell = getCellFromMouse(mousePixel);
 
-                // 🔹 Clic en botón de mejora
+                // Clic en botón de mejora
                 if (botonMejorar.getGlobalBounds().contains(mouseF)) {
                     if (torreSeleccionadaIndex >= 0 && torreSeleccionadaIndex < static_cast<int>(map.getTowers().size())) {
                         Tower& torre = map.getTowers()[torreSeleccionadaIndex];
                         if (torre.level < 3 && playerGold >= torre.upgradeCost) {
                             if (torre.upgrade(playerGold)) {
-                                std::cout << "🔧 Torre mejorada a nivel " << torre.level << "\n";
+                                std::cout << "Torre mejorada a nivel " << torre.level << "\n";
                             }
                         }
                     }
-                    return;
+                    break;
                 }
 
-                // 🔹 Si clic fue en el panel derecho (HUD), no hacer nada
+                // Si clic fue en el panel derecho (HUD), no hacer nada
                 if (mouseF.x >= cols * tileSize)
-                    return;
+                    break;
 
-                // 🔹 Selección de torre
+                // Selección de torre
                 torreSeleccionadaIndex = -1;
                 const auto& torres = map.getTowers();
                 for (size_t i = 0; i < torres.size(); ++i) {
                     if (torres[i].row == cell.y && torres[i].col == cell.x) {
                         torreSeleccionadaIndex = static_cast<int>(i);
-                        std::cout << "📍 Torre seleccionada en (" << torres[i].row << "," << torres[i].col << "), nivel " << torres[i].level << "\n";
-                        return;
+                        std::cout << "Torre seleccionada en (" << torres[i].row << "," << torres[i].col << "), nivel " << torres[i].level << "\n";
+                        break;
                     }
                 }
 
@@ -196,9 +196,9 @@ void GameWindow::run() {
                 int costo = nueva.getCost();
 
                 if (playerGold < costo) {
-                    std::cout << "❌ No tienes suficiente oro para torre tipo " << tipoTorreSeleccionada
+                    std::cout << "No tienes suficiente oro para torre tipo " << tipoTorreSeleccionada
                               << " (costo: " << costo << ")\n";
-                    return;
+                    break;
                 }
 
                 bool ocupado = false;
@@ -216,7 +216,7 @@ void GameWindow::run() {
                     std::cout << "❌ No se puede colocar torre: un enemigo está sobre esa celda.\n";
                 } else if (map.placeTower(cell.y, cell.x, nueva)) {
                     playerGold -= costo;
-                    std::cout << "✅ Torre tipo " << tipoTorreSeleccionada << " colocada en ("
+                    std::cout << "Torre tipo " << tipoTorreSeleccionada << " colocada en ("
                               << cell.y << ", " << cell.x << "). Oro restante: " << playerGold << "\n";
 
                     // Reseleccionar la torre recién colocada
@@ -228,7 +228,7 @@ void GameWindow::run() {
                         }
                     }
                 } else {
-                    std::cout << "❌ No se pudo colocar torre\n";
+                    std::cout << "No se pudo colocar torre\n";
                 }
             }
 
@@ -306,20 +306,37 @@ void GameWindow::run() {
         }
 
         // Mostrar info de la torre seleccionada
-        if (torreSeleccionadaIndex >= 0 && torreSeleccionadaIndex < static_cast<int>(map.getTowers().size())) {
+        // Mostrar info de la torre seleccionada
+        if (torreSeleccionadaIndex >= 0 && torreSeleccionadaIndex < (int)map.getTowers().size()) {
             Tower& torre = map.getTowers()[torreSeleccionadaIndex];
 
+            // 1) Generar la cadena
             std::ostringstream info;
             info << "Torre seleccionada\n"
                  << "Nivel: " << torre.level << "\n"
-                 << "Daño: " << torre.damage << "\n"
+                 << "Dano: "  << torre.damage << "\n"
                  << "Alcance: " << torre.range << "\n"
                  << "Cooldown: " << torre.attackCooldown << "s\n"
                  << "Costo Mejora: " << torre.upgradeCost;
 
             textoInfoTorre.setString(info.str());
+
+            // 2) Posicionar texto e imprimirlo
+            float panelX = cols * tileSize + 20.f;
+            float infoY  = 220.f;
+            textoInfoTorre.setPosition(panelX, infoY);
             window.draw(textoInfoTorre);
 
+            // 3) Calcular el alto ocupado por el texto
+            sf::FloatRect infoBounds = textoInfoTorre.getGlobalBounds();
+
+            // 4) Re-posicionar el botón justo debajo
+            float btnX = panelX;
+            float btnY = infoBounds.top + infoBounds.height + 10.f;  // +10px de margen
+            botonMejorar.setPosition(btnX, btnY);
+            textoMejorar.setPosition(btnX + 10.f, btnY + 8.f);
+
+            // 5) Dibujar botón + texto (si procede)
             if (torre.level < 3 && playerGold >= torre.upgradeCost) {
                 window.draw(botonMejorar);
                 window.draw(textoMejorar);
