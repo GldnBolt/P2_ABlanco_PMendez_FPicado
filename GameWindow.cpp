@@ -43,7 +43,7 @@ GameWindow::GameWindow(Map& mapRef)
     texTree.loadFromFile("Sprites/tree.png");
 
     // Fuente para el HUD
-    if (!font.loadFromFile("D:/GitHub/P2_ABlanco_PMendez_FPicado/P2_ABlanco_PMendez_FPicado/assets/ARIAL.TTF")) {
+    if (!font.loadFromFile("assets/ARIAL.TTF")) {
         std::cout << "Error al cargar la fuente\n";
     }
     else {

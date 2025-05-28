@@ -10,17 +10,17 @@ Tower::Tower(int x, int y, char type, int specialCooldown)
         attackCooldown = 1.5f;
         break;
         case 'M': // Mage
-            range = 3;
+            range = 4;
         damage = 10;
         attackCooldown = 1.0f;
         break;
         case 'A': // Archer
-            range = 3;
+            range = 5;
         damage = 5;
-        attackCooldown = 0.6f;
+        attackCooldown = 0.8f;
         break;
         default:
-            range = 3;
+            range = 5;
         damage = 5;
         attackCooldown = 2;
     }
