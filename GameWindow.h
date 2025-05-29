@@ -49,6 +49,8 @@ private:
     sf::RectangleShape hpBarFront;
     sf::Text gameOverText;
     bool gameOver = false;
+    bool gameWon = false;
+
 
     // 🧱 Texturas del mapa
     sf::Texture texGrass, texGrass2;

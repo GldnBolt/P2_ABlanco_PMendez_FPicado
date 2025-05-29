@@ -259,8 +259,15 @@ void GameWindow::run() {
             [](EnemyUnit* e){ return e->hasReachedEnd() || !e->isAlive(); }
         );
         if (oleadaTermino) {
-            nextGeneration();
+            if (oleada >= 50) {
+                gameWon = true;
+                gameOver = true;  // para detener el juego y mostrar pantalla final
+                std::cout << "🎉 ¡Felicidades! Has ganado el juego.\n";
+            } else {
+                nextGeneration();
+            }
         }
+
 
         // Actualiza enemigos, torres y combate
         for (auto& enemy : enemies) enemy->update();
@@ -301,17 +308,31 @@ void GameWindow::run() {
         window.draw(hpBarFront);
 
         if (gameOver) {
+            // Mostrar texto distinto según si ganó o perdió
+            if (gameWon) {
+                gameOverText.setString("🎉 ¡Ganaste! Felicidades.");
+            } else {
+                gameOverText.setString("Game Over");
+            }
             window.draw(gameOverText);
         }
+
         if (gameOver) {
             float elapsed   = gameOverClock.getElapsedTime().asSeconds();
             float remaining = countdownTime - elapsed;
             if (remaining > 0) {
-                countdownText.setString(
-                    "Reiniciando en: "
-                    + std::to_string(static_cast<int>(std::ceil(remaining)))
-                    + "s"
-                );
+                if (gameWon)
+                    countdownText.setString(
+                        "Reiniciando en: "
+                        + std::to_string(static_cast<int>(std::ceil(remaining)))
+                        + "s\nGracias por jugar!"
+                    );
+                else
+                    countdownText.setString(
+                        "Reiniciando en: "
+                        + std::to_string(static_cast<int>(std::ceil(remaining)))
+                        + "s"
+                    );
             } else {
                 resetGame();
             }
