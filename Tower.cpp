@@ -7,17 +7,17 @@ Tower::Tower(int x, int y, char type, int specialCooldown)
         case 'S': // Sniper
             range = 3;
         damage = 15;
-        attackCooldown = 1.5f;
+        attackCooldown = 2.0f;
         break;
         case 'M': // Mage
             range = 4;
         damage = 10;
-        attackCooldown = 1.0f;
+        attackCooldown = 2.0f;
         break;
         case 'A': // Archer
             range = 5;
         damage = 5;
-        attackCooldown = 0.8f;
+        attackCooldown = 1.0f;
         break;
         default:
             range = 5;
@@ -40,7 +40,6 @@ bool Tower::upgrade(int& playerGold) {
     playerGold -= upgradeCost;
     level++;
     damage += 5;
-    attackCooldown = static_cast<int>(attackCooldown * 0.9f); // Reducción del 10%
     range += 1;
     specialChance += 0.05f;
     upgradeCost += 15;

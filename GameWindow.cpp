@@ -530,7 +530,7 @@ void GameWindow::updateCombat() {
 
             if (distancia2 <= tower.range * tower.range) {
                 // Verifica cooldown
-                if (tower.lastAttackTime >= tower.attackCooldown) {
+                if (tower.lastAttackTime > tower.attackCooldown) {
                     // Ataque con posibilidad de especial
                     float chance = static_cast<float>(rand()) / RAND_MAX;
                     int damage = (chance < tower.specialChance)
@@ -567,7 +567,7 @@ void GameWindow::updateCombat() {
             if (playerHP <= 0 && !gameOver) {
                 gameOver = true;
                 playerHP = 0;
-                std::cout << "❌ GAME OVER\n";
+                std::cout << "GAME OVER\n";
                 gameOverClock.restart(); // inicia el conteo de 5s
             }
 
@@ -584,7 +584,7 @@ void GameWindow::updateCombat() {
 
             playerGold += oroGanado;
             enemyCounter++;
-            std::cout << "💰 Enemigo eliminado. +" << oroGanado << " oro. Total: " << playerGold << "\n";
+            std::cout << "Enemigo eliminado. +" << oroGanado << " oro. Total: " << playerGold << "\n";
             delete enemy;
         }
     }
@@ -646,7 +646,7 @@ void GameWindow::resetGame() {
     gameOver = false;
     map.clearTowers();  // Necesitas implementar este método
     gameOverClock.restart();
-    std::cout << "🔄 Juego reiniciado\n";
+    std::cout << "Juego reiniciado\n";
 }
 
 
