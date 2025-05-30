@@ -14,6 +14,13 @@ Map::Map(int rows, int cols, int entranceRow, int entranceCol, int bridgeRow, in
     grid.resize(rows, std::vector<char>(cols, '.'));
     grid[entranceRow][entranceCol] = 'E';
     grid[bridgeRow][bridgeCol] = 'B';
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (i != entranceRow && j != entranceCol && i != bridgeRow && j != bridgeCol) {
+                grid[i][j] = '.'; // camino
+            }
+        }
+    }
     std::cout << "Mapa inicializado\n";
 }
 

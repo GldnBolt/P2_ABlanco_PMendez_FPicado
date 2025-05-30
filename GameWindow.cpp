@@ -19,7 +19,7 @@ GameWindow::GameWindow(Map& mapRef)
 
     // Carga de texturas
     texCastle.loadFromFile("Sprites/tree.png");
-    texGrass.loadFromFile("Sprites/grass.png");
+    texGrass.loadFromFile("Sprites/grass3.png");
     texGrass2.loadFromFile("Sprites/grass2.png");
 
     texCornerTL.loadFromFile("Sprites/top_left_corner.png");
@@ -486,8 +486,12 @@ void GameWindow::drawMap() {
             char cell = map.getCell(row, col);
             sf::Sprite tile;
 
+            // Zacate
+            if (cell == ' ') {
+                tile.setTexture(texGrass);
+            }
             // Entrada
-            if (cell == 'E') {
+            else if (cell == 'E') {
                 tile.setTexture(texPortal);
             }
             // Salida
