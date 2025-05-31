@@ -11,16 +11,16 @@ EnemyUnit::EnemyUnit(const std::vector<sf::Vector2i>& path, int tileSize, char t
             arrowResistance = 0.5f;
             magicResistance = 2.f;
             artilleryResistance = 2.f;
-            color = sf::Color::White;
+            color = sf::Color::Green;
             break;
-        case 'E': // Esqueleto
+        case 'E': // Elfo oscuro
             speed = 0.25f;
             arrowResistance = 2.f;
             magicResistance = 0.5f;
             artilleryResistance = 2.f;
-            color = sf::Color::Green;
+            color = sf::Color::Black;
             break;
-        case 'H': // Humano
+        case 'H': // Harpia
             speed = 0.5f;
             arrowResistance = 1.f;
             magicResistance = 1.f;

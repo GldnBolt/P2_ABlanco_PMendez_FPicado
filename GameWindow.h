@@ -42,7 +42,7 @@ private:
     std::vector<EnemyUnit*> enemies;
     sf::Clock spawnClock;
     int enemyCounter = 0;
-    int playerGold = 50;
+    int playerGold = 150;
 
     int playerHP = 1000;
     sf::RectangleShape hpBarBack;
@@ -52,7 +52,7 @@ private:
     bool gameWon = false;
 
 
-    // 🧱 Texturas del mapa
+    // Texturas del mapa
     sf::Texture texGrass, texGrass2;
     sf::Texture texCornerTL, texCornerTR, texCornerBL, texCornerBR;
     sf::Texture texRoad[8];
@@ -67,6 +67,7 @@ private:
     sf::RectangleShape botonMejorar;
     sf::Text textoMejorar;
     sf::Text textoInfoTorre;
+    sf::Text textoStats;
 
     sf::Font font;
     sf::Text textOro;
@@ -81,6 +82,7 @@ private:
     float mutationChance = 0.1f;
     // estadísticas
     int muertosEstaOleada = 0;
+    int totalMutations = 0;
 
 
 

@@ -18,9 +18,10 @@ GameWindow::GameWindow(Map& mapRef)
     window.setFramerateLimit(60);
 
     // Carga de texturas
-    texCastle.loadFromFile("Sprites/tree.png");
+    texCastle.loadFromFile("Sprites/castle.png");
     texGrass.loadFromFile("Sprites/grass3.png");
     texGrass2.loadFromFile("Sprites/grass2.png");
+    texPortal.loadFromFile("Sprites/portal.png");
 
     texCornerTL.loadFromFile("Sprites/top_left_corner.png");
     texCornerTR.loadFromFile("Sprites/top_right_corner.png");
@@ -79,17 +80,22 @@ GameWindow::GameWindow(Map& mapRef)
     hpBarFront.setFillColor(sf::Color::Red);
     hpBarFront.setPosition(cols * tileSize + 20, 150);
 
+    textoStats.setFont(font);
+    textoStats.setCharacterSize(20);
+    textoStats.setFillColor(sf::Color::White);
+    textoStats.setPosition(cols * tileSize + 20, 450);  // posición en panel lateral
+
     // Texto "GAME OVER"
     gameOverText.setFont(font);
     gameOverText.setCharacterSize(32);
     gameOverText.setFillColor(sf::Color::Red);
     gameOverText.setString("GAME OVER");
-    gameOverText.setPosition(cols * tileSize + 20, 200);
+    gameOverText.setPosition(cols * tileSize + 20, 600);
 
     countdownText.setFont(font);
     countdownText.setCharacterSize(24);
     countdownText.setFillColor(sf::Color::White);
-    countdownText.setPosition(cols * tileSize + 20, 240);
+    countdownText.setPosition(cols * tileSize + 20, 640);
     countdownText.setString(""); // inicial vacío
 
     botonMejorar.setSize(sf::Vector2f(200, 40));
@@ -154,7 +160,6 @@ void GameWindow::run() {
                 window.draw(gameOverText);
                 window.draw(countdownText);
                 window.display();
-                // No procesamos más eventos en esta iteración
                 continue;
             }
 
@@ -262,7 +267,7 @@ void GameWindow::run() {
             if (oleada >= 50) {
                 gameWon = true;
                 gameOver = true;  // para detener el juego y mostrar pantalla final
-                std::cout << "🎉 ¡Felicidades! Has ganado el juego.\n";
+                std::cout << "¡Felicidades! Has ganado el juego.\n";
             } else {
                 nextGeneration();
             }
@@ -282,6 +287,11 @@ void GameWindow::run() {
                            [](Projectile& p){ return p.hasHit(); }),
             projectiles.end()
         );
+        // --- Actualiza estadísticas ---
+        std::ostringstream stats;
+        stats << "Mut. chance: " << static_cast<int>(mutationChance * 100) << "%\n"
+              << "Mut. ocurridas: " << totalMutations;
+        textoStats.setString(stats.str());
 
         // --- Actualiza HUD dinámico ---
         textOro.setString("Oro: " + std::to_string(playerGold));
@@ -306,11 +316,12 @@ void GameWindow::run() {
         for (auto& p     : projectiles) p.draw(window);
         window.draw(hpBarBack);
         window.draw(hpBarFront);
+        window.draw(textoStats);
 
         if (gameOver) {
             // Mostrar texto distinto según si ganó o perdió
             if (gameWon) {
-                gameOverText.setString("🎉 ¡Ganaste! Felicidades.");
+                gameOverText.setString("¡Ganaste! Felicidades.");
             } else {
                 gameOverText.setString("Game Over");
             }
@@ -444,18 +455,17 @@ void GameWindow::calcularFitness() {
     }
 }
 
-void GameWindow::evolucionarPoblacion() {
-    // 1) Ordena por fitness descendente
+// Evoluciona la población: selecciona los mejores y cruza para crear nuevos genomas
+void GameWindow::evolucionarPoblacion() { // Ordena por fitness y cruza los mejores
     std::sort(population.begin(), population.end(),
               [](auto& a, auto& b){ return a.fitness > b.fitness; });
-    // 2) Elitismo: conserva top 2
     std::vector<Genome> nueva;
-    nueva.push_back(population[0]);
-    nueva.push_back(population[1]);
-    // 3) Rellena el resto por crossover + mutación
-    while ((int)nueva.size() < populationSize) {
-        const Genome& padreA = population[rand() % (populationSize/2)];
-        const Genome& padreB = population[rand() % (populationSize/2)];
+    nueva.push_back(population[0]); // mejor genoma
+    nueva.push_back(population[1]); // segundo mejor
+
+    while ((int)nueva.size() < populationSize) { // cruza los mejores
+        const Genome& padreA = population[rand() % (populationSize/2)]; // selecciona al azar entre los mejores
+        const Genome& padreB = population[rand() % (populationSize/2)]; // selecciona al azar entre los mejores
         Genome hijo;
         // simple promedio
         hijo.health = (padreA.health + padreB.health)/2;
@@ -464,8 +474,9 @@ void GameWindow::evolucionarPoblacion() {
         hijo.magicRes = (padreA.magicRes + padreB.magicRes)/2;
         hijo.artRes   = (padreA.artRes   + padreB.artRes  )/2;
         // mutar
-        if ((rand()/(float)RAND_MAX) < mutationChance) {
-            hijo.speed += ((rand()/(float)RAND_MAX)-0.5f) * 0.2f;
+        if ((rand()/(float)RAND_MAX) < mutationChance) { // probabilidad de mutación
+            hijo.speed += ((rand()/(float)RAND_MAX)-0.5f) * 0.2f; // variación de -0.1 a +0.1
+            totalMutations++;
         }
         nueva.push_back(hijo);
     }
@@ -565,8 +576,8 @@ void GameWindow::updateCombat() {
         }
 
         if (enemy->hasReachedEnd()) {
-            playerHP -= 50;
-            std::cout << "💥 Enemigo alcanzó el castillo. Vida restante: " << playerHP << "\n";
+            playerHP -= 25;
+            std::cout << "Enemigo alcanzó el castillo. Vida restante: " << playerHP << "\n";
 
             if (playerHP <= 0 && !gameOver) {
                 gameOver = true;
@@ -643,12 +654,12 @@ void GameWindow::drawTowers() {
 void GameWindow::resetGame() {
     enemies.clear();
     projectiles.clear();
-    playerGold = 50;
+    playerGold = 150;
     playerHP = 1000;
     oleada = 1;
     enemyCounter = 0;
     gameOver = false;
-    map.clearTowers();  // Necesitas implementar este método
+    map.clearTowers();
     gameOverClock.restart();
     std::cout << "Juego reiniciado\n";
 }

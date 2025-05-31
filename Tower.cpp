@@ -5,24 +5,24 @@ Tower::Tower(int x, int y, char type, int specialCooldown)
 
     switch (type) {
         case 'S': // Sniper
-            range = 3;
-        damage = 15;
-        attackCooldown = 2.0f;
+            range = 2;
+        damage = 25;
+        attackCooldown = 1.5f;
         break;
         case 'M': // Mage
-            range = 4;
-        damage = 10;
-        attackCooldown = 2.0f;
+            range = 3;
+        damage = 20;
+        attackCooldown = 1.0f;
         break;
         case 'A': // Archer
-            range = 5;
-        damage = 5;
-        attackCooldown = 1.0f;
+            range = 4;
+        damage = 15;
+        attackCooldown = 0.5f;
         break;
         default:
             range = 5;
-        damage = 5;
-        attackCooldown = 2;
+        damage = 10;
+        attackCooldown = 1;
     }
 }
 
@@ -41,6 +41,7 @@ bool Tower::upgrade(int& playerGold) {
     level++;
     damage += 5;
     range += 1;
+    attackCooldown -= 0.2f; // Reduce cooldown
     specialChance += 0.05f;
     upgradeCost += 15;
 

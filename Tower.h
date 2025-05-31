@@ -10,7 +10,7 @@ public:
     int level = 1;         // Nivel actual (1–3)
     int damage;
     int range;
-    int attackCooldown;
+    float attackCooldown;
     int specialCooldown;
     int upgradeCost = 15;  // Costo del siguiente upgrade
     float specialChance = 0.1f; // Probabilidad de ataque especial
